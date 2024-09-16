@@ -1,0 +1,5 @@
+# Ignore any build directory
+**build**
+
+# Ignore any .uf2 file
+**.uf2
