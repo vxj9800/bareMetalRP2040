@@ -1,0 +1,6 @@
+[submodule "utils/CRCpp"]
+	path = utils/CRCpp
+	url = https://github.com/d-bahr/CRCpp.git
+[submodule "utils/uf2"]
+	path = utils/uf2
+	url = https://github.com/microsoft/uf2.git
