@@ -1,42 +1,9 @@
 ## 1. RP2040 Boot Up Process
 
-Let's consider the following code C code in the context of programming a Pi Pico development board.
-```C {.numberLines}
-#include <stdint.h>
-#include <stdbool.h>
-
-// Define necessary register addresses
-#define RESETS_RESET *(uint32_t *) (0x4000c000)
-#define IO_BANK0_GPIO25_CTRL *(uint32_t *) (0x400140cc)
-#define SIO_GPIO_OE_SET *(uint32_t *) (0xd0000024)
-#define SIO_GPIO_OUT_XOR *(uint32_t *) (0xd000001c)
-
-// Main entry point
-void bootStage2(void)
-{
-    // Bring IO_BANK0 out of reset state
-    RESETS_RESET &= ~(1 << 5);
-
-    // Set GPIO 25 function to SIO
-    IO_BANK0_GPIO25_CTRL = 5;
-
-    // Set output enable for GPIO 25 in SIO
-    SIO_GPIO_OE_SET |= 1 << 25;
-
-    while (true)
-    {
-        // Wait for some time
-        for (uint32_t i = 0; i < 100000; ++i);
-
-        // Flip output for GPIO 25
-        SIO_GPIO_OUT_XOR |= 1 << 25;
-    }
-}
-```
-This code is trying to blink the LED attached with GPIO25 on Pi Pico. Your first assignment is to read up on the sections from the [RP2040 datasheet](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf) in which the registers used in this code are defined.
+Let's consider the [`boot2Blinky.c`](./boot2Blinky.c) in the context of programming a Pi Pico development board. This code is trying to blink the LED attached with GPIO25 on Pi Pico. Your first assignment is to read up on the sections from the [RP2040 datasheet](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf) in which the registers used in this code are defined.
 
 ### The Two Stage Booting Process
-Even though this code may look relatively small and simple, getting it to run on RP2040 requires much more than just this code. Opposite to what was discussed for Arm^:copyright:^ &micro;C boot up process on the [main page](../README.md), RP2040 goes through a Two-Stage booting process. A very good resource on this booting process is [V. Hunter Adams's](https://vanhunteradams.com/) discussion on the [topic](https://vanhunteradams.com/Pico/Bootloader/Boot_sequence.html), which is also used to write next couple of paragraphs.
+Even though this code may look relatively small and simple, getting it to run on RP2040 requires much more than just this code. Opposite to what was discussed for Arm<sup>&copy;</sup> &micro;C boot up process on the [main page](../README.md), RP2040 goes through a Two-Stage booting process. A very good resource on this booting process is [V. Hunter Adams's](https://vanhunteradams.com/) discussion on the [topic](https://vanhunteradams.com/Pico/Bootloader/Boot_sequence.html), which is also used to write next couple of paragraphs.
 
 The RP2040 datasheet separates the [boot sequence](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=131) into the *hardware-controlled* section which happens before the processors begin executing the [*bootrom*](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=132), and the *processor-controlled* section during which processor cores 0 and 1 begin to execute the *bootrom*. This is the first stage of the booting process and the second stage of the booting process (which lives at the beginning of the user's program) then runs after the *bootrom*.
 
@@ -57,7 +24,7 @@ Note that three conditions need to be satisfied for running the `bootStage2` fun
 Let's tackle one problem at a time.
 
 ### Compiled Code - A Deeper Dive
-First of all, go ahead and copy the code from the [top](#1-rp2040-boot-up-process) into a `boot2Blinky.c` file and compile it by executing
+First of all, let's compile [`boot2Blinky.c`](./boot2Blinky.c) file by executing
 ```bash
 $ arm-none-eabi-gcc -mcpu=cortex-m0plus -mthumb boot2Blinky.c -c -o boot2Blinky.o
 ```
@@ -104,9 +71,9 @@ Note that the first major piece of information the `boot2Blinky.objdump` file co
 - `.data` - Contains the data or variable values.
 - `.bss` - Define the data that needs to be initialized to zero.
 
-For our case, only the `.text`section has non-zero size, which is `0x00000060` meaning that the actual program is 96 Bytes in size.
+For our case, only the `.text` section has non-zero size, which is `0x00000060`, meaning that the actual program is 96 Bytes in size.
 
-However, note that VMA(virtual memory address)/LMA(load memory address) for sections are set to 0 - meaning, `boot2Blinky.o` is not yet a complete firmware, because it does not contain the information where those sections should be loaded in the address map. We need to use a linker to produce a full firmware from `boot2Blinky.o`.
+However, note that VMA(virtual memory address)/LMA(load memory address) for all the sections are set to 0 - meaning, `boot2Blinky.o` is not yet a complete firmware, because it does not contain the information where those sections should be loaded in the address map. We need to use a linker to produce a full firmware from `boot2Blinky.o`.
 
 ### The Linker Script
 If you have worked on a multi file C/C++ project then you'd know that the job of a Linker is to merge multiple object files into an executable file and resolve symbol references. In case of an embedded system, the Linker performs one more essential task of defining appropriate locations for different sections of a program. To figure out which bits go where, the Linker relies on a Linker Script - a blueprint for your program. An awesome discussion on Linker Scripts is provided by [François Baldassari](https://github.com/franc0is) in his blog [From Zero to main(): Demystifying Firmware Linker Scripts](https://interrupt.memfault.com/blog/how-to-write-linker-scripts-for-firmware#from-zero-to-main-demystifying-firmware-linker-scripts). This section discusses Linker Scripts in a very concise manner.
@@ -132,11 +99,11 @@ In order to allocate program space, the linker needs to know how much memory is 
 
 Finally, the placement of each section from the object files is specified in the `SECTION` definition. Only one section, `.text`, is specified in the script above since we know from our previous analysis that the `.data` and `.bss` sections are empty. Technically, line 11 tells the linker to merge all the sections that start with `.text` name (`.text*`) from all the object files (`*(.text*)`) should be merged into a single section called `.text` in the final executable and should be appended to the Flash. This is exactly what we are trying to achieve.
 
-Copy the contents of the Linker Script from above into a `link.ld` file. To compile the source code and link it, execute following in the terminal.
+Copy the contents of the Linker Script from above into a `link.ld` file. To produce a properly linked executable, run following command in the terminal.
 ```bash
 $ arm-none-eabi-ld boot2Blinky.o -T link.ld -nostdlib -o boot2Blinky.elf
 ```
-Following is the description of this command
+Here is the description of this command
 
 - `arm-none-eabi-ld` is the GCC Arm Linker
 - `boot2Blinky.o` is the object file we want to link. There can be more of such files.
@@ -144,7 +111,7 @@ Following is the description of this command
 - `-nostdlib` restricts the linker from linking the Standard Library along with our code, more on this later.
 - `-o boot2Blinky.elf` specifies the output executable file path.
 
-If you wish to compile and link in one command then you can execute
+If you wish to compile and link in one command then you can run
 ```bash
 $ arm-none-eabi-gcc -mcpu=cortex-m0plus -mthumb boot2Blinky.c -T link.ld -nostdlib -o boot2Blinky.elf
 ```
@@ -171,7 +138,7 @@ Disassembly of section .text:
 10000000:       b580            push    {r7, lr}
 10000002:       b082            sub     sp, #8
 ```
-you'd notice that now there is only the `.text` section in the file and its VMA/LMA is 0x10000000, which we were aiming for.
+you'd notice that now there is only the `.text` section in the file and its VMA/LMA is 0x10000000, which is what we were aiming for.
 
 A binary file can also be generated now which would represent the raw program that may run on a &micro;C. This file can be generated by executing
 ```bash
@@ -186,83 +153,7 @@ As discussed previously, if the `BOOTSEL` button is not pressed then the &micro;
 
 To check the validity, the code in bootrom computes a CRC32 checksum of the first 252 Bytes and compares it with the last 4 Bytes of the 256 Bytes it has loaded from Flash to SRAM. If the computed CRC32 checksum matches with the last 4 Bytes, then the 252 Bytes are assumed to be a valid code and it starts executing from the top. Hence the goal in this section is to somehow convert the 96 Bytes binary into a 256 Bytes one and make sure that the last 4 Bytes contain a CRC32 checksum of the first 252 Bytes.
 
-Calculation of CRC32 checksum is a big topic in itself and is not in the scope of this guide. To avoid going into too much detail, an open-source CRC calculation library called [CRCpp](https://github.com/d-bahr/CRCpp) is used here. Consider the following C++ program.
-```C++ {.numberLines}
-#include <fstream>
-#include <iostream>
-#include <filesystem>
-
-#include "CRCpp/inc/CRC.h"
-
-int main(int argc, char *argv[])
-{
-    std::filesystem::path binFilePath;
-    std::ifstream binFile;
-
-    // Make sure that an argument is entered
-    if (argc > 1)
-    {
-        binFilePath = argv[1];
-
-        // Bail if file name doesn't have .bin extension
-        if (binFilePath.extension() != ".bin")
-        {
-            std::cout << "The input file must have .bin extension. Exiting ..." << std::endl;
-            return 1;
-        }
-
-        // Bail if the file doesn't exist
-        if (!std::filesystem::exists(binFilePath))
-        {
-            std::cout << "Could not locate file: " << binFilePath << ". Exiting ..." << std::endl;
-            return 1;
-        }
-
-        // Open the file
-        binFile.open(binFilePath, std::ios::binary);
-        binFile.seekg(0, std::ios::end);
-        size_t binFileSize = binFile.tellg();
-        binFile.seekg(0, std::ios::beg);
-
-        // Bail if it is > 252 bytes in size
-        if (binFileSize > 252)
-        {
-            std::cout << "The input must be 252 Bytes in size at max. Exiting ..." << std::endl;
-            return 1;
-        }
-
-        // All good, now load the file into an array
-        unsigned char binFileData[256] = {0};
-        binFile.read((char *)binFileData, 252);
-        binFile.close();
-
-        // Calculate CRC32 for the first 252 bytes of data
-        unsigned char crc[4] = {0};
-        *reinterpret_cast<std::uint32_t*>(crc) = CRC::Calculate(binFileData, 252, CRC::CRC_32_MPEG2());
-
-        // Place the crc value at the end of the array
-        for (size_t i = 0; i < 4; ++i)
-            binFileData[252 + i] = crc[i];
-
-        // Output the contents of the array to a .cpp file
-        std::ofstream cppFile(binFilePath.replace_filename("boot2").replace_extension("c"));
-        cppFile << "unsigned char boot2[256] __attribute__((section(\".boot2\"))) = {" << std::endl;
-        for (size_t i = 0; i < 256; ++i)
-            cppFile << "0x" << std::setw(2) << std::setfill('0') << std::hex << (unsigned int)binFileData[i] << ((i + 1) % 16 == 0 ? ",\n" : ",");
-        cppFile << "};";
-        cppFile.close();
-    }
-    else
-    {
-        std::cout << "An input file with .bin extension must be provided. Exiting ..." << std::endl;
-        return 1;
-    }
-
-    return 0;
-}
-```
-
-You'll see that majority of the code here loads the contents of the binary file into a 256 Bytes long array, which is zero-initialized. After that, at line 51, the CRC32 checksum is calculated using the library discussed previously.
+Calculation of CRC32 checksum is a big topic in itself and is not in the scope of this guide. To avoid going into too much detail, an open-source CRC calculation library called [CRCpp](https://github.com/d-bahr/CRCpp) is used here. Consider the [padCrc32.cpp](./padCrc32.cpp) file. You'll see that majority of the code here loads the contents of the binary file into a 256 Bytes long array, which is zero-initialized. After that, at line 51, the CRC32 checksum is calculated using the library discussed previously.
 ```C++
 // Calculate CRC32 for the first 252 bytes of data
 unsigned char crc[4] = {0};
@@ -322,7 +213,7 @@ SECTIONS
     .boot2 : { *(.boot2*) }      > flash  /* Changed */
 }
 ```
-Note that the entry point is now changed to `boot2` and the `SECTIONS` contain only the `.boot2` section since that is the section containing the code this time around.
+Note that the entry point is now changed to `boot2` and the `SECTIONS` contain the `.boot2` section since that is the section containing the code this time around.
 
 A new ELF and binary files can now be generated by executing
 ```bash
@@ -366,7 +257,7 @@ $ git clone https://github.com/microsoft/uf2.git
 ```
 Now execute
 ```bash
-python3 ./uf2/utils/uf2conv.py -b 0x10000000 -f 0xe48bff56 -c boot2.bin -o boot2.uf2
+$ python3 ./uf2/utils/uf2conv.py -b 0x10000000 -f 0xe48bff56 -c boot2.bin -o boot2.uf2
 ```
 Following is the description of this command
 - `./uf2/utils/uf2conv.py` is the Python script that can convert a binary into a UF2 file.

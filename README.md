@@ -1,5 +1,5 @@
 # Bare Metal RP2040: A Step-By-Step Guide
-This project started with a pre-conceived notion that Pico C/C++ SDK contains a lot of bloat (although I am pretty sure this is not at all true :sweat_smile:). However, soon the goal of this project became understanding how any Arm^:copyright:^ microcontroller (&micro;C) can be programmed using a generic compiler and the datasheet of the &micro;C, i.e. without using any manufacturer provided framework/SDK.
+This project started with a pre-conceived notion that Pico C/C++ SDK contains a lot of bloat (although I am pretty sure this is not at all true :sweat_smile:). However, soon the goal of this project became understanding how any Arm<sup>&copy;</sup> microcontroller (&micro;C) can be programmed using a generic compiler and the datasheet of the &micro;C, i.e. without using any manufacturer provided framework/SDK.
 
 A good amount of discussion in this guide is inspired from the [bare-metal-programming-guide](https://github.com/cpq/bare-metal-programming-guide) repository by [Sergey Lyubka](https://github.com/cpq). However, the discussion there is prepared for NUCLEO-F429ZI development board which houses an STM32F429ZI &micro;C. The RP2040 &micro;C on the other hand, which this guide focusses on, is quite different compared to STM32F429ZI in terms of boot-up process, and thus requires many extra steps before any code can be executed on it.
 
@@ -71,8 +71,8 @@ There are three common operations done on registers,
 2. Clear a bit - Make any bit of a register 0 - `(uint32_t *) (REGISTER_ADDR) &= ~(1 << bitLocation)`
 3. Flip a bit - Make any bit of a register flip, 0 -> 1 or 1 -> 0 - `(uint32_t *) (REGISTER_ADDR) ^= 1 << bitLocation`
 
-### How an Arm^:copyright:^ &micro;C boots up?
-When an Arm^:copyright:^ &micro;C boots, it reads a so-called *vector table* from the beginning of Flash. A vector table is a concept common to all Arm^:copyright:^ &micro;Cs. That is an array of 32-bit addresses of interrupt handlers (event driven functions). First 16 entries are reserved by Arm^:copyright:^ and are common to all Arm^:copyright:^ &micro;Cs. The rest of interrupt handlers are specific to the given &micro;C - these are interrupt handlers for peripherals. Simpler &micro;Cs with few peripherals have few interrupt handlers, and more complex &micro;Cs have many.
+### How an Arm<sup>&copy;</sup> &micro;C boots up?
+When an Arm<sup>&copy;</sup> &micro;C boots, it reads a so-called *vector table* from the beginning of Flash. A vector table is a concept common to all Arm<sup>&copy;</sup> &micro;Cs. That is an array of 32-bit addresses of interrupt handlers (event driven functions). First 16 entries are reserved by Arm<sup>&copy;</sup> and are common to all Arm<sup>&copy;</sup> &micro;Cs. The rest of interrupt handlers are specific to the given &micro;C - these are interrupt handlers for peripherals. Simpler &micro;Cs with few peripherals have few interrupt handlers, and more complex &micro;Cs have many.
 
 Every entry in the vector table is an address of a function that &micro;C executes when a hardware interrupt (IRQ) triggers. The exception are first two entries, which play a key role in the &micro;C boot process. Those two first values are: an initial stack pointer, and an address of the boot function to execute (a firmware entry point).
 
