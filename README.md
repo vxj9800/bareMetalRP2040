@@ -8,8 +8,9 @@ This guide is designed to be followed chapter-after-chapter, each chapter tackli
 Even though this guide is prepared in "For Dummies" format, not everything required for programming a &micro;C can be taught here. So, the readers are expected to know the following,
 1. Basic C programming (Knowledge of pointers is mandatory)
 2. How to compile and execute C code using a Linux terminal
-3. Basic Unix/Linux terminal commands like, `mkdir`, `rm`, `git`, etc.
-4. How to read a datasheet (The answer is with focus and patience).
+3. Knowledge of basic communication protocols on a &micro;C like, UART, I2C, SPI, etc.
+4. Basic Unix/Linux terminal commands like, `mkdir`, `rm`, `git`, etc.
+5. How to read a datasheet (The answer is with focus and patience).
 
 ## Why this guide?
 The first question someone may ask after starting to read this guide is why, why is this guide required. Isn't the [bare-metal-programming-guide](https://github.com/cpq/bare-metal-programming-guide) enough, since this guide is based on it. The answer, even though partially given previously, is more of yes and no. When this guide was initially being prepared, the aim was to only discuss the boot-up process of RP2040 and that's it. The reason for discussing this is provided in the second paragraph at the very [top](#bare-metal-rp2040-a-step-by-step-guide). However, while preparing that discussion, many other bare metal programming related challenges were discovered that are not discussed in [bare-metal-programming-guide](https://github.com/cpq/bare-metal-programming-guide). Hence, this guide.
