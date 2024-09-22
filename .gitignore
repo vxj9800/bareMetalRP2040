@@ -3,3 +3,6 @@
 
 # Ignore any .uf2 file
 **.uf2
+
+# Ignore any workspace VSCode settings
+**.vscode**
