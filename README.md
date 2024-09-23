@@ -17,7 +17,7 @@ The first question someone may ask after starting to read this guide is why, why
 
 ## Prerequisites
 Following tools will be required to proceed further,
-1. A development board that houses an RP2040 &micro;C
+1. A development board that houses an RP2040 &micro;C (Raspberry Pi Pico is used here)
 2. A Text Editor application, [VSCode](https://code.visualstudio.com/), [Notepad++](https://notepad-plus-plus.org/), etc.
 3. Arm Toolchain
 4. GNU Make
@@ -29,7 +29,7 @@ $ sudo apt update
 $ sudo apt install make gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential g++ libstdc++-arm-none-eabi-newlib
 ```
 
-## Let's Get Started
+## Preliminaries
 There are some questions that should be answered before moving forward with the Bare-Metal programming.
 
 ### How does a Processor work?
@@ -43,7 +43,7 @@ A program is made up of two things,
 
 The instructions are constantly fetched directly from Flash. However, the data, on which the processor is operating, lives in the RAM (Random Access Memory). Flash is perfect for always sending information (instructions) to the processor in a linear fashion. On the other hand, RAM provides high-speed read and write access to any information present in it, thus being suitable for storing the data.
 
-There is one more layer of information storage in a processor, known as Registers. These containers are an inherent part of the processor. They not only store the information, but can also affect the hardware, e.g. activating 3.3V output on a pin of the processor. Thus, registers allow activation or deactivation of different hardware aspects sitting around the processor.
+There is one more layer of information storage in a processor, known as Registers. These containers are an inherent part of the processor. They not only store the information, but can also affect the hardware, e.g. activating 3.3V output on a pin of the processor. Thus, registers allow activation or deactivation of different hardware components sitting around the processor.
 
 ### The Address Map
 In a &micro;C, all the components discussed in the previous section (and more known as peripherals) are fit into a single chip (for most cases). And, from programming perspective as well, these components live at fixed addresses (pointers) so that they can be accessed easily. A list of such addresses for a &micro;C is known as an Address Map. The summary of full Address Map of RP2040 is given blow ([RP2040 Datasheet, p.g. 24](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=25))
@@ -67,10 +67,16 @@ Learning to access (read or write) data at different addresses is one of the mos
 ```
 Let's break down the line of C code above. The hex number `0x40014000` is the base address of the GPIO peripheral. And, `0x0cc` is the offset of GPIO25_CTRL register from GPIO base. Thus, `0x400140cc` becomes the actual address of GPIO25_CTRL register. To access the value at that address, `0x400140cc` needs to be converted into a pointer first. This is achieved by type casting the address value into a pointe, `(uint32_t *) (0x40014000 + 0x0cc)`. Now, this pointer can be dereferenced to by adding a leading `*` to access it's value, `*(uint32_t *) (0x40014000 + 0x0cc)`. The remaining operation, `|= 1 << 8`, means to get the existing value of the GPIO25_CTRL register and perform a bitwise OR operation with `1 << 8 = 0b00000000000000000000000100000000`, which sets the 8th bit regardless of its current state.
 
-There are three common operations done on registers,
-1. Set a bit - Make any bit of a register 1 - `(uint32_t *) (REGISTER_ADDR) |= 1 << bitLocation`
-2. Clear a bit - Make any bit of a register 0 - `(uint32_t *) (REGISTER_ADDR) &= ~(1 << bitLocation)`
-3. Flip a bit - Make any bit of a register flip, 0 -> 1 or 1 -> 0 - `(uint32_t *) (REGISTER_ADDR) ^= 1 << bitLocation`
+There are five common operations done on registers,
+1. Set Value - Put all the bits of a register to a known state - `(uint32_t *) (REGISTER_ADDR) = regValue`
+2. Set a bit - Make any bit of a register 1 - `(uint32_t *) (REGISTER_ADDR) |= 1 << bitLocation`
+3. Clear a bit - Make any bit of a register 0 - `(uint32_t *) (REGISTER_ADDR) &= ~(1 << bitLocation)`
+4. Flip a bit - Make any bit of a register flip, 0 -> 1 or 1 -> 0 - `(uint32_t *) (REGISTER_ADDR) ^= 1 << bitLocation`
+5. Check a bit - Check if a register bit is 0 or 1 - `bool bitVal = ((uint32_t *) (REGISTER_ADDR)) & (1 << bitLocation)`
+
+A register is shown to be accessed using `*(uint32_t *)` pointer casting method in this section. There are two things to note here,
+1. Use of `uint32_t` - The &micro;C used here is a 32-bit &micro;C. Meaning that all the registers in the &micro;C are 32-bit wide. Thus, a fixed length (32-bit wide) data type (`uint32_t`) is used to let the compiler know that the value being accessed is 32-bits in size.
+2. A missing `volatile` keyword - Technically speaking, register accesses should always accompany `volatile` keyword, e.g. `(volatile uint32_t *) (REGISTER_ADDR) |= 1 << bitLocation`. This keyword lets the compiler know that the value stored at this address may change by means other than the code, i.e. the hardware itself can change its state. This prevents some optimizations from being applied at the compile time. The effect of this is discussed in [Chap ?](./unknown_codeOptimizations/).
 
 ### How an Arm<sup>&copy;</sup> &micro;C boots up?
 When an Arm<sup>&copy;</sup> &micro;C boots, it reads a so-called *vector table* from the beginning of Flash. A vector table is a concept common to all Arm<sup>&copy;</sup> &micro;Cs. That is an array of 32-bit addresses of interrupt handlers (event driven functions). First 16 entries are reserved by Arm<sup>&copy;</sup> and are common to all Arm<sup>&copy;</sup> &micro;Cs. The rest of interrupt handlers are specific to the given &micro;C - these are interrupt handlers for peripherals. Simpler &micro;Cs with few peripherals have few interrupt handlers, and more complex &micro;Cs have many.

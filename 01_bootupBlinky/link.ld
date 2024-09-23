@@ -1,4 +1,4 @@
-ENTRY(boot2);
+ENTRY(bootStage2);
 
 MEMORY
 {
@@ -8,5 +8,10 @@ MEMORY
 
 SECTIONS
 {
-    .boot2 : { *(.boot2*) }      > flash
+    .text :
+    {
+        *(.boot2*)
+        . = ORIGIN(flash) + 252;
+        *(.crc*)
+    } > flash
 }

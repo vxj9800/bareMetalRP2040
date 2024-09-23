@@ -8,7 +8,7 @@
 #define SIO_GPIO_OUT_XOR *(uint32_t *) (0xd000001c)
 
 // Main entry point
-void bootStage2(void)
+__attribute__((section(".boot2"))) void bootStage2(void)
 {
     // Bring IO_BANK0 out of reset state
     RESETS_RESET &= ~(1 << 5);
