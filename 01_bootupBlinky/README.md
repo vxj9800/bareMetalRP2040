@@ -59,7 +59,7 @@ Let's tackle one problem at a time.
 ### Compiled Code - A Deeper Dive
 First of all, let's compile the code provided at the [top](#1-rp2040-boot-up-process) by first copying it into [`boot2Blinky.c`](./boot2Blinky.c) file and then executing following command in the terminal
 ```bash
-$ arm-none-eabi-gcc boot2Blinky.c -mcpu=cortex-m0plus -c -o boot2Blinky.o
+$ arm-none-eabi-gcc boot2Blinky.c -mcpu=cortex-m0plus -c -o boot2Blinky_temp.o
 ```
 Following is the description of this command
 
@@ -67,15 +67,15 @@ Following is the description of this command
 - `boot2Blinky.c` is the source code file that needs to be compiled.
 - `-mcpu=cortex-m0plus` instructs the compiler to generate code for Cortex M0+ Arm Processor.
 - `-c` asks the compiler to just compile the code but not link it, more on linking later.
-- `-o boot2Blinky.o` specifies the output file where the compiled code will go.
+- `-o boot2Blinky_temp.o` specifies the output file where the compiled code will go.
 
-Check the size of `boot2Blinky.o` file. It would be around 900 Bytes. This is much more than 256 Bytes that we are aiming for. However, a code compiled this way (it is in ELF binary format) contains much more information than just the instructions and data. We can generate the *Object Dump* of this file to extract all the information from `boot2Blinky.o` file in human readable format,
+Check the size of `boot2Blinky_temp.o` file. It would be around 900 Bytes. This is much more than 256 Bytes that we are aiming for. However, a code compiled this way (it is in ELF binary format) contains much more information than just the instructions and data. We can generate the *Object Dump* of this file to extract all the information from `boot2Blinky_temp.o` file in human readable format,
 ```bash
-$ arm-none-eabi-objdump -hSD boot2Blinky.o > boot2Blinky.objdump
+$ arm-none-eabi-objdump -hSD boot2Blinky_temp.o > boot2Blinky_temp.objdump
 ```
-If you open the `boot2Blinky.objdump` in a text editor, you should see
+If you open the `boot2Blinky_temp.objdump` in a text editor, you should see
 ``` {.numberLines}
-boot2Blinky.o:     file format elf32-littlearm
+boot2Blinky_temp.o:     file format elf32-littlearm
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
@@ -97,7 +97,7 @@ Disassembly of section .text:
    2:	b082      	sub	sp, #8
    ...
 ```
-Note that the first major piece of information the `boot2Blinky.objdump` file contains is a table listing different sections and their attributes like size, VML, LMA, etc. The important sections for us right now are
+Note that the first major piece of information the `boot2Blinky_temp.objdump` file contains is a table listing different sections and their attributes like size, VML, LMA, etc. The important sections for us right now are
 
 - `.text` - Contains the instructions that can be executed by the processor.
 - `.data` - Contains the data or variable values.
@@ -105,7 +105,7 @@ Note that the first major piece of information the `boot2Blinky.objdump` file co
 
 For our case, only the `.text` section has non-zero size, which is `0x00000060`, meaning that the actual program is 96 Bytes in size.
 
-However, note that VMA(virtual memory address)/LMA(load memory address) for all the sections are set to 0 - meaning, `boot2Blinky.o` is not yet a complete firmware, because it does not contain the information where those sections should be loaded in the address map. We need to use a linker to produce a full firmware from `boot2Blinky.o`.
+However, note that VMA(virtual memory address)/LMA(load memory address) for all the sections are set to 0. Meaning, `boot2Blinky_temp.o` is not yet a complete firmware, because it does not contain the information where those sections should be loaded in the address map. A linker needs to be used to produce a full firmware from `boot2Blinky_temp.o`.
 
 ### The Linker Script
 If you have worked on a multi file C/C++ project then you'd know that the job of a Linker is to merge multiple object files into an executable file and resolve symbol references. In case of an embedded system, the Linker performs one more essential task of defining appropriate locations for different sections of a program. To figure out which sections go where, the Linker relies on a Linker Script - a blueprint for your program. An awesome discussion on Linker Scripts is provided by [François Baldassari](https://github.com/franc0is) in his blog [From Zero to main(): Demystifying Firmware Linker Scripts](https://interrupt.memfault.com/blog/how-to-write-linker-scripts-for-firmware#from-zero-to-main-demystifying-firmware-linker-scripts). This section discusses Linker Scripts in a very concise manner.
@@ -136,27 +136,27 @@ Finally, the placement of each section from the object files is specified in the
 
 Copy the contents of the Linker Script from above into a `link.ld` file. To produce a properly linked executable, run following command in the terminal.
 ```bash
-$ arm-none-eabi-ld boot2Blinky.o -T link.ld -nostdlib -o boot2Blinky.elf
+$ arm-none-eabi-ld boot2Blinky_temp.o -T link.ld -nostdlib -o boot2Blinky_temp.elf
 ```
 Here is the description of this command
 
 - `arm-none-eabi-ld` is the GCC Arm Linker
-- `boot2Blinky.o` is the object file we want to link. There can be more of such files.
+- `boot2Blinky_temp.o` is the object file we want to link. There can be more of such files.
 - `-T link.ld` specifies the Linker Script that should be used by the linker.
 - `-nostdlib` restricts the linker from linking the Standard Library along with our code, more on this later.
-- `-o boot2Blinky.elf` specifies the output executable file path.
+- `-o boot2Blinky_temp.elf` specifies the output executable file path.
 
 If you wish to compile and link in one command then you can run
 ```bash
-$ arm-none-eabi-gcc boot2Blinky.c -mcpu=cortex-m0plus -T link.ld -nostdlib -o boot2Blinky.elf
+$ arm-none-eabi-gcc boot2Blinky.c -mcpu=cortex-m0plus -T link.ld -nostdlib -o boot2Blinky_temp.elf
 ```
 
 By generating the Object Dump of the newly created ELF file
 ```bash
-$ arm-none-eabi-objdump -hSD boot2Blinky.elf > boot2Blinky.objdump
+$ arm-none-eabi-objdump -hSD boot2Blinky_temp.elf > boot2Blinky_temp.objdump
 ```
 ``` {.numberLines}
-boot2Blinky.elf:     file format elf32-littlearm
+boot2Blinky_temp.elf:     file format elf32-littlearm
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
@@ -177,9 +177,9 @@ you'd notice that now there is only the `.text` section in the file and its VMA/
 
 A binary file can also be generated now which would represent the raw program that may run on a &micro;C. This file can be generated by executing
 ```bash
-$ arm-none-eabi-objcopy -O binary boot2Blinky.elf boot2Blinky.bin
+$ arm-none-eabi-objcopy -O binary boot2Blinky_temp.elf boot2Blinky_temp.bin
 ```
-If you check the size of `boot2Blinky.bin` file, you'd see that it is exactly 96 Bytes in size, the size of the `.text` section. Now this is something that should go into the Flash. You can also open this file using any [Binary File Viewer](https://hexed.it/) and make sure that its content match with the Disassembly of `.text` section you may find (2nd Column) in the Object Dump.
+If you check the size of `boot2Blinky_temp.bin` file, you'd see that it is exactly 96 Bytes in size, the size of the `.text` section. Now this is something that should go into the Flash. You can also open this file using any [Binary File Viewer](https://hexed.it/) and make sure that its content match with the Disassembly of `.text` section you may find (2nd Column) in the Object Dump.
 
 However, what happened to placing the `.text` section at the start of the Flash? That information seems to have been lost in going from ELF format to binary format. This problem is solved by the UF2 file format that is discussed in a later section.
 
@@ -196,20 +196,20 @@ unsigned char crc[4] = {0};
 ```
 Note the use of `CRC_32_MPEG2()` in the code above. There exists multiple parameters in CRC32 calculation which would result in different CRC32 checksum. The parameters used by bootrom in RP2040 are discussed in [Section 2.8.1.3.1](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=134) of the RP2040 datasheet. These specific set of parameters correspond to [CRC-32/MPEG-2](https://crccalc.com/?method=CRC-32/MPEG-2) algorithm.
 
-Finally, the 4 Bytes of CRC checksum is output into a `crc.c` file. For this specific case, the resulting `crc.c` fill will contain the following,
+Finally, the 4 Bytes of CRC checksum is output into a `crc.c` file. For this specific case, the resulting `crc.c` fill should contain the following,
 ```C {.numberLines}
 __attribute__((section(".crc"))) unsigned char crc[4] = {0xc0, 0x8d, 0x02, 0x6c};
 ```
 Note that the array definition in `crc.c` file contains `__attribute__((section(".crc")))`. This is a directive to the compiler telling it to place the `crc` array in a separate section called `.crc`. This allows us to control where this data will be placed in the Flash with the help of the Linker Script.
 
-To generate the `crc.c`, first clone the [CRCpp](https://github.com/d-bahr/CRCpp) repo by executing following command where the `boot2Blinky.bin` is located.
+To generate the `crc.c`, first clone the [CRCpp](https://github.com/d-bahr/CRCpp) repo by executing following command where the `boot2Blinky_temp.bin` is located.
 ```bash
 $ git clone https://github.com/d-bahr/CRCpp.git
 ```
 Then, copy the code for calculating CRC32 checksum into `compCrc32.cpp` and execute following commands.
 ```bash
 $ g++ compCrc32.cpp -o compCrc32.out
-$ ./compCrc32.out boot2Blinky.bin
+$ ./compCrc32.out boot2Blinky_temp.bin
 ```
 
 Now that we have computed a valid CRC checksum for the Boot Stage 2 code, both together can be compiled into a valid binary file. But, some changes needs to be made to the `boot2Blinky.c` and the linker script before doing that.
@@ -217,7 +217,7 @@ Now that we have computed a valid CRC checksum for the Boot Stage 2 code, both t
 // Replace the function definition with
 __attribute__((section(".boot2"))) void bootStage2(void)
 ```
-Similar to what was done with the `crc` array, `__attribute__((section(".boot2")))` instructs the compiler to put the `bootStage2` function into a special section called `.boot2`. The reason of doing this is also to gain the flexibility of putting this function at the start of the Flash. This will become important in the upcoming tutorials where this `.boot2` section will actually contain the code that sets up the Execute-In-Place (XIP) peripheral so that the rest of the firmware can execute directly from the Flash.
+Similar to what was done with the `crc` array, `__attribute__((section(".boot2")))` instructs the compiler to put the `bootStage2` function into a special section called `.boot2`. The reason of doing this is also to gain the flexibility of putting this function at the start of the Flash. This will become important in the upcoming tutorials where this `.boot2` section will actually contain the code that sets up the Execute-In-Place (XIP) peripheral so that the rest of the firmware can execute directly from the Flash. This way, the second stage bootloader can be differentiated from the `.text` sections of other C/C++ code.
 ```
 ENTRY(bootStage2);
 
@@ -296,3 +296,71 @@ Following is the description of this command
 Done, finally! :relieved:
 
 Now you have a `boot2Blinky.uf2` that you can upload to a Pi Pico and see the fruits of your labor.
+
+### Clean Up the Mess
+Going through everything discussed so far, you must have generated many files and have typed a good amount of commands in the terminal. The GNU Make utility can be used to keep the folder containing the code clean and automate the build process.
+
+GNU Make, `make`, utility uses a configuration file named `Makefile` where it reads instructions of a recipe. This automation is great because it also documents the process of building firmware, used compilation flags, etc.
+
+There is a great Makefile tutorial at [https://makefiletutorial.com](https://makefiletutorial.com) - for those new to `make`. Below, the most essential concepts required to understand a simple bare metal `Makefile` are discussed. Those who already familiar with `make`, can skip this section.
+
+The `Makefile` format is simple:
+```make
+recipe1: rawMaterial1 rawMaterial2
+	instruction ...             # Comments can go after hash symbol
+	instruction ....            # IMPORTANT: instruction must be preceded with the TAB character
+
+recipe2: recipe1 rawMaterial3   # A recipe can be a raw material for another recipe
+	instruction ...             # Don't forget about TAB. Spaces won't work!
+```
+Now, `make` with a recipe name (also called target) can be executed:
+```bash
+$ make recipe1
+```
+It is possible to define variables and use them in instructions. Also, recipes can be file names that needs to be created:
+```make
+# Source code files
+BOOT2 = boot2Blinky
+
+# Directory to create temporary build files in
+BUILDDIR = build
+
+# Compilation related variables
+TOOLCHAIN = arm-none-eabi-
+CFLAGS ?= -mcpu=cortex-m0plus
+
+makeDir:
+	mkdir -p $(BUILDDIR)
+
+$(BUILDDIR)/$(BOOT2).bin:
+    $(TOOLCHAIN)gcc $(CFLAGS) $(BOOT2).c -c -o $(BUILDDIR)/$(BOOT2)_temp.o
+```
+And, any recipe can have a list of raw materials. For example, `boot2Blinky.bin` depends on our source file `boot2Blinky.c`. Whenever `boot2Blinky.c` file changes, the `make build` command rebuilds `boot2Blinky.bin`:
+```make
+$(BUILDDIR)/$(BOOT2).bin: $(BOOT2).c
+	$(TOOLCHAIN)gcc $(CFLAGS) $(BOOT2).c -c -o $(BUILDDIR)/$(BOOT2)_temp.o
+    ...
+```
+Now take a look at the `Makefile` provided in this folder. Try to replace `$(VARIABLE)` with the value of the variable to see what commands are being executed. The variable `$@` expands to the name of the recipe being built. If you execute `make build` in the terminal, you should see the following output,
+```bash
+$ make build
+mkdir -p build
+arm-none-eabi-gcc -mcpu=cortex-m0plus boot2Blinky.c -c -o build/boot2Blinky_temp.o
+arm-none-eabi-objdump -hSD build/boot2Blinky_temp.o > build/boot2Blinky_temp.objdump
+arm-none-eabi-objcopy -O binary build/boot2Blinky_temp.o build/boot2Blinky_temp.bin
+g++ -I ../utils compCrc32.cpp -o build/compCrc32.out
+./build/compCrc32.out build/boot2Blinky_temp.bin
+arm-none-eabi-gcc boot2Blinky.c build/crc.c -mcpu=cortex-m0plus -T link.ld -nostdlib -o build/boot2Blinky.elf
+arm-none-eabi-objdump -hSD build/boot2Blinky.elf > build/boot2Blinky.objdump
+arm-none-eabi-objcopy -O binary build/boot2Blinky.elf build/boot2Blinky.bin
+python3 ../utils/uf2/utils/uf2conv.py -b 0x10000000 -f 0xe48bff56 -c build/boot2Blinky.bin -o build/boot2Blinky.uf2
+Converted to uf2, output size: 512, start address: 0x10000000
+Wrote 512 bytes to build/boot2Blinky.uf2
+cp build/boot2Blinky.uf2 ./boot2Blinky.uf2
+```
+There are three things to note here.
+1. The supporting libraries, `uf2` and `CRCpp`, are moved to a separate folder called `utils`. The `Makefile` provided here is designed to account for this.
+2. The `Makefile` is designed to produce all the new files into a `build` directory and copy only the `boot2Blinky.uf2` to the current directory. This keeps the current folder clean and manageable.
+3. An extra recipe called `clean` is provided which is not a raw material for the `build` recipe. Its job is to delete the `build` directory and the `boot2Blinky.uf2`.
+
+This folder is now ready to serve as a starting point for creating a working Second Stage Bootloader.
