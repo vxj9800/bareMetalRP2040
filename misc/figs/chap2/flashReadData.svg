@@ -1,0 +1,585 @@
+<svg class="WaveDrom" width="1040" height="150" overflow="hidden" version="1.1" viewBox="0 0 1040 150" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <style type="text/css">text{font-size:11pt;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;fill-opacity:1;font-family:Helvetica}.h1{font-size:33pt;font-weight:bold}.h2{font-size:27pt;font-weight:bold}.h3{font-size:20pt;font-weight:bold}.h4{font-size:14pt;font-weight:bold}.h5{font-size:11pt;font-weight:bold}.h6{font-size:8pt;font-weight:bold}.muted{fill:#aaa}.warning{fill:#f6b900}.error{fill:#f60000}.info{fill:#0041c4}.success{fill:#00ab00}.s1{fill:none;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none}.s2{fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none}.s3{color:#000000;fill:none;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:1, 3;stroke-dashoffset:0;marker:none;visibility:visible;display:inline;overflow:visible}.s4{color:#000000;fill:none;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker:none;visibility:visible;display:inline;overflow:visible}.s5{fill:#808080;stroke:none}.s6{fill:#000000;fill-opacity:1;stroke:none}.s7{color:#000000;fill:#808080;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1px;marker:none;visibility:visible;display:inline;overflow:visible}.s8{color:#000000;fill:#ffffb4;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1px;marker:none;visibility:visible;display:inline;overflow:visible}.s9{color:#000000;fill:#ffe0b9;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1px;marker:none;visibility:visible;display:inline;overflow:visible}.s10{color:#000000;fill:#b9e0ff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1px;marker:none;visibility:visible;display:inline;overflow:visible}.s11{color:#000000;fill:#ccfdfe;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1px;marker:none;visibility:visible;display:inline;overflow:visible}.s12{color:#000000;fill:#cdfdc5;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1px;marker:none;visibility:visible;display:inline;overflow:visible}.s13{color:#000000;fill:#f0c1fb;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1px;marker:none;visibility:visible;display:inline;overflow:visible}.s14{color:#000000;fill:#f5c2c0;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1px;marker:none;visibility:visible;display:inline;overflow:visible}</style>
+ <defs>
+  <g id="nclk">
+   <path class="s1" d="m0 0v20h10"/>
+  </g>
+  <g id="000">
+   <path class="s1" d="m0 20h10"/>
+  </g>
+  <g id="0m1">
+   <path class="s1" d="m0 20h1l6-20h3"/>
+  </g>
+  <g id="111">
+   <path class="s1" d="m0 0h10"/>
+  </g>
+  <g id="1m0">
+   <path class="s1" d="m0 0h1l6 20h3"/>
+  </g>
+  <g id="zzz">
+   <path class="s1" d="m0 10h10"/>
+  </g>
+  <g id="zm0">
+   <path class="s1" d="m0 10h1l4 10h5"/>
+  </g>
+  <g id="gap">
+   <path class="s5" d="m7-2h-4c-5 0-5 24-10 24h4c5 0 5-24 10-24z"/>
+   <path class="s1" d="m-7 22c5 0 5-24 10-24"/>
+   <path class="s1" d="m-3 22c5 0 5-24 10-24"/>
+  </g>
+  <g id="Pclk">
+   <path class="s6" d="m-3 12 3-9 3 9c-2-1-4-1-6 0z"/>
+   <path class="s1" d="m0 20v-20h10"/>
+  </g>
+  <g id="1mv-4">
+   <path class="s9" d="m1 0h9v20h-3z"/>
+   <path class="s1" d="m1 0 6 20h3"/>
+   <path class="s1" d="m0 0h10"/>
+  </g>
+  <g id="vvv-4">
+   <path class="s9" d="m10 20h-10v-20h10"/>
+   <path class="s1" d="m0 20h10"/>
+   <path class="s1" d="m0 0h10"/>
+  </g>
+  <g id="vmz-4">
+   <path class="s9" d="m0 0h1c2 6 6 10 9 10-3 0-7 4-9 10h-1"/>
+   <path class="s1" d="m0 0h1c2 6 6 10 9 10"/>
+   <path class="s1" d="m0 20h1c2-6 6-10 9-10"/>
+  </g>
+  <g id="zmv-5">
+   <path class="s10" d="m5 0h5v20h-5l-4-10z"/>
+   <path class="s1" d="m1 10 4 10h5"/>
+   <path class="s1" d="m0 10h1l4-10h5"/>
+  </g>
+  <g id="vvv-5">
+   <path class="s10" d="m10 20h-10v-20h10"/>
+   <path class="s1" d="m0 20h10"/>
+   <path class="s1" d="m0 0h10"/>
+  </g>
+  <g id="vmz-5">
+   <path class="s10" d="m0 0h1c2 6 6 10 9 10-3 0-7 4-9 10h-1"/>
+   <path class="s1" d="m0 0h1c2 6 6 10 9 10"/>
+   <path class="s1" d="m0 20h1c2-6 6-10 9-10"/>
+  </g>
+  <g id="vmv-4-4">
+   <path class="s9" d="m7 0h3v20h-3l-3-10z"/>
+   <path class="s9" d="m1 0h-1v20h1l3-10z"/>
+   <path class="s1" d="m0 0h1l6 20h3"/>
+   <path class="s1" d="m0 20h1l6-20h3"/>
+  </g>
+  <g id="vmv-5-5">
+   <path class="s10" d="m7 0h3v20h-3l-3-10z"/>
+   <path class="s10" d="m1 0h-1v20h1l3-10z"/>
+   <path class="s1" d="m0 0h1l6 20h3"/>
+   <path class="s1" d="m0 20h1l6-20h3"/>
+  </g>
+  <marker id="arrowhead" style="fill:#0041c4" markerHeight="7" markerWidth="10" orient="auto" refX="15" viewBox="0 -4 11 8">
+   <path d="m0-4 11 4-11 4z"/>
+  </marker>
+  <marker id="arrowtail" style="fill:#0041c4" markerHeight="7" markerWidth="10" orient="auto" refX="-15" viewBox="-11 -4 11 8">
+   <path d="m0-4-11 4 11 4z"/>
+  </marker>
+ </defs>
+ <rect width="1040" height="150" rx="6.6667" ry="6.6667" style="fill:#808080"/>
+ <g transform="translate(50.5 .5)">
+  <g style="stroke-dasharray:1,3;stroke-width:.5;stroke:#888">
+   <line y2="150" style="stroke:#404040"/>
+   <line x1="20" x2="20" y2="150" style="stroke:#404040"/>
+   <line x1="40" x2="40" y2="150" style="stroke:#404040"/>
+   <line x1="60" x2="60" y2="150" style="stroke:#404040"/>
+   <line x1="80" x2="80" y2="150" style="stroke:#404040"/>
+   <line x1="100" x2="100" y2="150" style="stroke:#404040"/>
+   <line x1="120" x2="120" y2="150" style="stroke:#404040"/>
+   <line x1="140" x2="140" y2="150" style="stroke:#404040"/>
+   <line x1="160" x2="160" y2="150" style="stroke:#404040"/>
+   <line x1="180" x2="180" y2="150" style="stroke:#404040"/>
+   <line x1="200" x2="200" y2="150" style="stroke:#404040"/>
+   <line x1="220" x2="220" y2="150" style="stroke:#404040"/>
+   <line x1="240" x2="240" y2="150" style="stroke:#404040"/>
+   <line x1="260" x2="260" y2="150" style="stroke:#404040"/>
+   <line x1="280" x2="280" y2="150" style="stroke:#404040"/>
+   <line x1="300" x2="300" y2="150" style="stroke:#404040"/>
+   <line x1="320" x2="320" y2="150" style="stroke:#404040"/>
+   <line x1="340" x2="340" y2="150" style="stroke:#404040"/>
+   <line x1="360" x2="360" y2="150" style="stroke:#404040"/>
+   <line x1="380" x2="380" y2="150" style="stroke:#404040"/>
+   <line x1="400" x2="400" y2="150" style="stroke:#404040"/>
+   <line x1="420" x2="420" y2="150" style="stroke:#404040"/>
+   <line x1="440" x2="440" y2="150" style="stroke:#404040"/>
+   <line x1="460" x2="460" y2="150" style="stroke:#404040"/>
+   <line x1="480" x2="480" y2="150" style="stroke:#404040"/>
+   <line x1="500" x2="500" y2="150" style="stroke:#404040"/>
+   <line x1="520" x2="520" y2="150" style="stroke:#404040"/>
+   <line x1="540" x2="540" y2="150" style="stroke:#404040"/>
+   <line x1="560" x2="560" y2="150" style="stroke:#404040"/>
+   <line x1="580" x2="580" y2="150" style="stroke:#404040"/>
+   <line x1="600" x2="600" y2="150" style="stroke:#404040"/>
+   <line x1="620" x2="620" y2="150" style="stroke:#404040"/>
+   <line x1="640" x2="640" y2="150" style="stroke:#404040"/>
+   <line x1="660" x2="660" y2="150" style="stroke:#404040"/>
+   <line x1="680" x2="680" y2="150" style="stroke:#404040"/>
+   <line x1="700" x2="700" y2="150" style="stroke:#404040"/>
+   <line x1="720" x2="720" y2="150" style="stroke:#404040"/>
+   <line x1="740" x2="740" y2="150" style="stroke:#404040"/>
+   <line x1="760" x2="760" y2="150" style="stroke:#404040"/>
+   <line x1="780" x2="780" y2="150" style="stroke:#404040"/>
+   <line x1="800" x2="800" y2="150" style="stroke:#404040"/>
+   <line x1="820" x2="820" y2="150" style="stroke:#404040"/>
+   <line x1="840" x2="840" y2="150" style="stroke:#404040"/>
+   <line x1="860" x2="860" y2="150" style="stroke:#404040"/>
+   <line x1="880" x2="880" y2="150" style="stroke:#404040"/>
+   <line x1="900" x2="900" y2="150" style="stroke:#404040"/>
+   <line x1="920" x2="920" y2="150" style="stroke:#404040"/>
+   <line x1="940" x2="940" y2="150" style="stroke:#404040"/>
+   <line x1="960" x2="960" y2="150" style="stroke:#404040"/>
+   <line x1="980" x2="980" y2="150" style="stroke:#404040"/>
+  </g>
+  <g transform="translate(0,5)">
+   <text class="info" x="-10" y="15" text-anchor="end" xml:space="preserve"><tspan>CSn</tspan></text>
+   <use xlink:href="#111"/>
+   <use transform="translate(10)" xlink:href="#1m0"/>
+   <use transform="translate(20)" xlink:href="#000"/>
+   <use transform="translate(30)" xlink:href="#000"/>
+   <use transform="translate(40)" xlink:href="#000"/>
+   <use transform="translate(50)" xlink:href="#000"/>
+   <use transform="translate(60)" xlink:href="#000"/>
+   <use transform="translate(70)" xlink:href="#000"/>
+   <use transform="translate(80)" xlink:href="#000"/>
+   <use transform="translate(90)" xlink:href="#000"/>
+   <use transform="translate(100)" xlink:href="#000"/>
+   <use transform="translate(110)" xlink:href="#000"/>
+   <use transform="translate(120)" xlink:href="#000"/>
+   <use transform="translate(130)" xlink:href="#000"/>
+   <use transform="translate(140)" xlink:href="#000"/>
+   <use transform="translate(150)" xlink:href="#000"/>
+   <use transform="translate(160)" xlink:href="#000"/>
+   <use transform="translate(170)" xlink:href="#000"/>
+   <use transform="translate(180)" xlink:href="#000"/>
+   <use transform="translate(190)" xlink:href="#000"/>
+   <use transform="translate(200)" xlink:href="#000"/>
+   <use transform="translate(210)" xlink:href="#000"/>
+   <use transform="translate(220)" xlink:href="#000"/>
+   <use transform="translate(230)" xlink:href="#000"/>
+   <use transform="translate(240)" xlink:href="#000"/>
+   <use transform="translate(250)" xlink:href="#000"/>
+   <use transform="translate(260)" xlink:href="#000"/>
+   <use transform="translate(270)" xlink:href="#000"/>
+   <use transform="translate(280)" xlink:href="#000"/>
+   <use transform="translate(290)" xlink:href="#000"/>
+   <use transform="translate(300)" xlink:href="#000"/>
+   <use transform="translate(310)" xlink:href="#000"/>
+   <use transform="translate(320)" xlink:href="#000"/>
+   <use transform="translate(330)" xlink:href="#000"/>
+   <use transform="translate(340)" xlink:href="#000"/>
+   <use transform="translate(350)" xlink:href="#000"/>
+   <use transform="translate(360)" xlink:href="#000"/>
+   <use transform="translate(370)" xlink:href="#000"/>
+   <use transform="translate(380)" xlink:href="#000"/>
+   <use transform="translate(390)" xlink:href="#000"/>
+   <use transform="translate(400)" xlink:href="#000"/>
+   <use transform="translate(410)" xlink:href="#000"/>
+   <use transform="translate(420)" xlink:href="#000"/>
+   <use transform="translate(430)" xlink:href="#000"/>
+   <use transform="translate(440)" xlink:href="#000"/>
+   <use transform="translate(450)" xlink:href="#000"/>
+   <use transform="translate(460)" xlink:href="#000"/>
+   <use transform="translate(470)" xlink:href="#000"/>
+   <use transform="translate(480)" xlink:href="#000"/>
+   <use transform="translate(490)" xlink:href="#000"/>
+   <use transform="translate(500)" xlink:href="#000"/>
+   <use transform="translate(510)" xlink:href="#000"/>
+   <use transform="translate(520)" xlink:href="#000"/>
+   <use transform="translate(530)" xlink:href="#000"/>
+   <use transform="translate(540)" xlink:href="#000"/>
+   <use transform="translate(550)" xlink:href="#000"/>
+   <use transform="translate(560)" xlink:href="#000"/>
+   <use transform="translate(570)" xlink:href="#000"/>
+   <use transform="translate(580)" xlink:href="#000"/>
+   <use transform="translate(590)" xlink:href="#000"/>
+   <use transform="translate(600)" xlink:href="#000"/>
+   <use transform="translate(610)" xlink:href="#000"/>
+   <use transform="translate(620)" xlink:href="#000"/>
+   <use transform="translate(630)" xlink:href="#000"/>
+   <use transform="translate(640)" xlink:href="#000"/>
+   <use transform="translate(650)" xlink:href="#000"/>
+   <use transform="translate(660)" xlink:href="#000"/>
+   <use transform="translate(670)" xlink:href="#000"/>
+   <use transform="translate(680)" xlink:href="#000"/>
+   <use transform="translate(690)" xlink:href="#000"/>
+   <use transform="translate(700)" xlink:href="#000"/>
+   <use transform="translate(710)" xlink:href="#000"/>
+   <use transform="translate(720)" xlink:href="#000"/>
+   <use transform="translate(730)" xlink:href="#000"/>
+   <use transform="translate(740)" xlink:href="#000"/>
+   <use transform="translate(750)" xlink:href="#000"/>
+   <use transform="translate(760)" xlink:href="#000"/>
+   <use transform="translate(770)" xlink:href="#000"/>
+   <use transform="translate(780)" xlink:href="#000"/>
+   <use transform="translate(790)" xlink:href="#000"/>
+   <use transform="translate(800)" xlink:href="#000"/>
+   <use transform="translate(810)" xlink:href="#000"/>
+   <use transform="translate(820)" xlink:href="#000"/>
+   <use transform="translate(830)" xlink:href="#000"/>
+   <use transform="translate(840)" xlink:href="#000"/>
+   <use transform="translate(850)" xlink:href="#000"/>
+   <use transform="translate(860)" xlink:href="#000"/>
+   <use transform="translate(870)" xlink:href="#000"/>
+   <use transform="translate(880)" xlink:href="#000"/>
+   <use transform="translate(890)" xlink:href="#000"/>
+   <use transform="translate(900)" xlink:href="#000"/>
+   <use transform="translate(910)" xlink:href="#000"/>
+   <use transform="translate(920)" xlink:href="#000"/>
+   <use transform="translate(930)" xlink:href="#000"/>
+   <use transform="translate(940)" xlink:href="#000"/>
+   <use transform="translate(950)" xlink:href="#000"/>
+   <use transform="translate(960)" xlink:href="#0m1"/>
+   <use transform="translate(970)" xlink:href="#111"/>
+  </g>
+  <g transform="translate(0,35)">
+   <text class="info" x="-10" y="15" text-anchor="end" xml:space="preserve"><tspan>SCL</tspan></text>
+   <use xlink:href="#000"/>
+   <use transform="translate(10)" xlink:href="#000"/>
+   <use transform="translate(20)" xlink:href="#Pclk"/>
+   <use transform="translate(30)" xlink:href="#111"/>
+   <use transform="translate(40)" xlink:href="#nclk"/>
+   <use transform="translate(50)" xlink:href="#000"/>
+   <use transform="translate(60)" xlink:href="#Pclk"/>
+   <use transform="translate(70)" xlink:href="#111"/>
+   <use transform="translate(80)" xlink:href="#nclk"/>
+   <use transform="translate(90)" xlink:href="#000"/>
+   <use transform="translate(100)" xlink:href="#Pclk"/>
+   <use transform="translate(110)" xlink:href="#111"/>
+   <use transform="translate(120)" xlink:href="#nclk"/>
+   <use transform="translate(130)" xlink:href="#000"/>
+   <use transform="translate(140)" xlink:href="#Pclk"/>
+   <use transform="translate(150)" xlink:href="#111"/>
+   <use transform="translate(160)" xlink:href="#nclk"/>
+   <use transform="translate(170)" xlink:href="#000"/>
+   <use transform="translate(180)" xlink:href="#Pclk"/>
+   <use transform="translate(190)" xlink:href="#111"/>
+   <use transform="translate(200)" xlink:href="#nclk"/>
+   <use transform="translate(210)" xlink:href="#000"/>
+   <use transform="translate(220)" xlink:href="#Pclk"/>
+   <use transform="translate(230)" xlink:href="#111"/>
+   <use transform="translate(240)" xlink:href="#nclk"/>
+   <use transform="translate(250)" xlink:href="#000"/>
+   <use transform="translate(260)" xlink:href="#Pclk"/>
+   <use transform="translate(270)" xlink:href="#111"/>
+   <use transform="translate(280)" xlink:href="#nclk"/>
+   <use transform="translate(290)" xlink:href="#000"/>
+   <use transform="translate(300)" xlink:href="#Pclk"/>
+   <use transform="translate(310)" xlink:href="#111"/>
+   <use transform="translate(320)" xlink:href="#nclk"/>
+   <use transform="translate(330)" xlink:href="#000"/>
+   <use transform="translate(340)" xlink:href="#Pclk"/>
+   <use transform="translate(350)" xlink:href="#111"/>
+   <use transform="translate(360)" xlink:href="#nclk"/>
+   <use transform="translate(370)" xlink:href="#000"/>
+   <use transform="translate(380)" xlink:href="#Pclk"/>
+   <use transform="translate(390)" xlink:href="#111"/>
+   <use transform="translate(400)" xlink:href="#nclk"/>
+   <use transform="translate(410)" xlink:href="#000"/>
+   <use transform="translate(420)" xlink:href="#Pclk"/>
+   <use transform="translate(430)" xlink:href="#111"/>
+   <use transform="translate(440)" xlink:href="#nclk"/>
+   <use transform="translate(450)" xlink:href="#000"/>
+   <use transform="translate(460)" xlink:href="#Pclk"/>
+   <use transform="translate(470)" xlink:href="#111"/>
+   <use transform="translate(480)" xlink:href="#nclk"/>
+   <use transform="translate(490)" xlink:href="#000"/>
+   <use transform="translate(500)" xlink:href="#Pclk"/>
+   <use transform="translate(510)" xlink:href="#111"/>
+   <use transform="translate(520)" xlink:href="#nclk"/>
+   <use transform="translate(530)" xlink:href="#000"/>
+   <use transform="translate(540)" xlink:href="#Pclk"/>
+   <use transform="translate(550)" xlink:href="#111"/>
+   <use transform="translate(560)" xlink:href="#nclk"/>
+   <use transform="translate(570)" xlink:href="#000"/>
+   <use transform="translate(580)" xlink:href="#Pclk"/>
+   <use transform="translate(590)" xlink:href="#111"/>
+   <use transform="translate(600)" xlink:href="#nclk"/>
+   <use transform="translate(610)" xlink:href="#000"/>
+   <use transform="translate(620)" xlink:href="#Pclk"/>
+   <use transform="translate(630)" xlink:href="#111"/>
+   <use transform="translate(640)" xlink:href="#nclk"/>
+   <use transform="translate(650)" xlink:href="#000"/>
+   <use transform="translate(660)" xlink:href="#Pclk"/>
+   <use transform="translate(670)" xlink:href="#111"/>
+   <use transform="translate(680)" xlink:href="#nclk"/>
+   <use transform="translate(690)" xlink:href="#000"/>
+   <use transform="translate(700)" xlink:href="#Pclk"/>
+   <use transform="translate(710)" xlink:href="#111"/>
+   <use transform="translate(720)" xlink:href="#nclk"/>
+   <use transform="translate(730)" xlink:href="#000"/>
+   <use transform="translate(740)" xlink:href="#Pclk"/>
+   <use transform="translate(750)" xlink:href="#111"/>
+   <use transform="translate(760)" xlink:href="#nclk"/>
+   <use transform="translate(770)" xlink:href="#000"/>
+   <use transform="translate(780)" xlink:href="#Pclk"/>
+   <use transform="translate(790)" xlink:href="#111"/>
+   <use transform="translate(800)" xlink:href="#nclk"/>
+   <use transform="translate(810)" xlink:href="#000"/>
+   <use transform="translate(820)" xlink:href="#Pclk"/>
+   <use transform="translate(830)" xlink:href="#111"/>
+   <use transform="translate(840)" xlink:href="#nclk"/>
+   <use transform="translate(850)" xlink:href="#000"/>
+   <use transform="translate(860)" xlink:href="#Pclk"/>
+   <use transform="translate(870)" xlink:href="#111"/>
+   <use transform="translate(880)" xlink:href="#nclk"/>
+   <use transform="translate(890)" xlink:href="#000"/>
+   <use transform="translate(900)" xlink:href="#Pclk"/>
+   <use transform="translate(910)" xlink:href="#111"/>
+   <use transform="translate(920)" xlink:href="#nclk"/>
+   <use transform="translate(930)" xlink:href="#000"/>
+   <use transform="translate(940)" xlink:href="#Pclk"/>
+   <use transform="translate(950)" xlink:href="#111"/>
+   <use transform="translate(960)" xlink:href="#nclk"/>
+   <use transform="translate(970)" xlink:href="#000"/>
+  </g>
+  <g transform="translate(0,65)">
+   <text class="info" x="-10" y="15" text-anchor="end" xml:space="preserve"><tspan/></text>
+  </g>
+  <g transform="translate(0,95)">
+   <text class="info" x="-10" y="15" text-anchor="end" xml:space="preserve"><tspan>DO</tspan></text>
+   <use xlink:href="#zzz"/>
+   <use transform="translate(10)" xlink:href="#zm0"/>
+   <use transform="translate(20)" xlink:href="#000"/>
+   <use transform="translate(30)" xlink:href="#000"/>
+   <use transform="translate(40)" xlink:href="#000"/>
+   <use transform="translate(50)" xlink:href="#000"/>
+   <use transform="translate(60)" xlink:href="#000"/>
+   <use transform="translate(70)" xlink:href="#000"/>
+   <use transform="translate(80)" xlink:href="#000"/>
+   <use transform="translate(90)" xlink:href="#000"/>
+   <use transform="translate(100)" xlink:href="#000"/>
+   <use transform="translate(110)" xlink:href="#000"/>
+   <use transform="translate(120)" xlink:href="#000"/>
+   <use transform="translate(130)" xlink:href="#000"/>
+   <use transform="translate(140)" xlink:href="#000"/>
+   <use transform="translate(150)" xlink:href="#000"/>
+   <use transform="translate(160)" xlink:href="#000"/>
+   <use transform="translate(170)" xlink:href="#000"/>
+   <use transform="translate(180)" xlink:href="#000"/>
+   <use transform="translate(190)" xlink:href="#000"/>
+   <use transform="translate(200)" xlink:href="#000"/>
+   <use transform="translate(210)" xlink:href="#000"/>
+   <use transform="translate(220)" xlink:href="#000"/>
+   <use transform="translate(230)" xlink:href="#000"/>
+   <use transform="translate(240)" xlink:href="#000"/>
+   <use transform="translate(250)" xlink:href="#0m1"/>
+   <use transform="translate(260)" xlink:href="#111"/>
+   <use transform="translate(270)" xlink:href="#111"/>
+   <use transform="translate(280)" xlink:href="#111"/>
+   <use transform="translate(290)" xlink:href="#111"/>
+   <use transform="translate(300)" xlink:href="#111"/>
+   <use transform="translate(310)" xlink:href="#111"/>
+   <use transform="translate(320)" xlink:href="#111"/>
+   <use transform="translate(330)" xlink:href="#1mv-4"/>
+   <use transform="translate(340)" xlink:href="#vvv-4"/>
+   <use transform="translate(350)" xlink:href="#vvv-4"/>
+   <use transform="translate(360)" xlink:href="#vvv-4"/>
+   <use transform="translate(370)" xlink:href="#vmv-4-4"/>
+   <use transform="translate(380)" xlink:href="#vvv-4"/>
+   <use transform="translate(390)" xlink:href="#vvv-4"/>
+   <use transform="translate(400)" xlink:href="#vvv-4"/>
+   <use transform="translate(410)" xlink:href="#vmv-4-4"/>
+   <use transform="translate(420)" xlink:href="#vvv-4"/>
+   <use transform="translate(430)" xlink:href="#vvv-4"/>
+   <use transform="translate(440)" xlink:href="#vvv-4"/>
+   <use transform="translate(450)" xlink:href="#vmv-4-4"/>
+   <use transform="translate(460)" xlink:href="#vvv-4"/>
+   <use transform="translate(470)" xlink:href="#vvv-4"/>
+   <use transform="translate(480)" xlink:href="#vvv-4"/>
+   <use transform="translate(490)" xlink:href="#vmv-4-4"/>
+   <use transform="translate(500)" xlink:href="#vvv-4"/>
+   <use transform="translate(510)" xlink:href="#vvv-4"/>
+   <use transform="translate(520)" xlink:href="#vvv-4"/>
+   <use transform="translate(530)" xlink:href="#vmv-4-4"/>
+   <use transform="translate(540)" xlink:href="#vvv-4"/>
+   <use transform="translate(550)" xlink:href="#vvv-4"/>
+   <use transform="translate(560)" xlink:href="#vvv-4"/>
+   <use transform="translate(570)" xlink:href="#vmv-4-4"/>
+   <use transform="translate(580)" xlink:href="#vvv-4"/>
+   <use transform="translate(590)" xlink:href="#vvv-4"/>
+   <use transform="translate(600)" xlink:href="#vvv-4"/>
+   <use transform="translate(610)" xlink:href="#vmv-4-4"/>
+   <use transform="translate(620)" xlink:href="#vvv-4"/>
+   <use transform="translate(630)" xlink:href="#vvv-4"/>
+   <use transform="translate(640)" xlink:href="#vmz-4"/>
+   <use transform="translate(650)" xlink:href="#zzz"/>
+   <use transform="translate(660)" xlink:href="#zzz"/>
+   <use transform="translate(670)" xlink:href="#zzz"/>
+   <use transform="translate(680)" xlink:href="#zzz"/>
+   <use transform="translate(690)" xlink:href="#zzz"/>
+   <use transform="translate(700)" xlink:href="#zzz"/>
+   <use transform="translate(710)" xlink:href="#zzz"/>
+   <use transform="translate(720)" xlink:href="#zzz"/>
+   <use transform="translate(730)" xlink:href="#zzz"/>
+   <use transform="translate(740)" xlink:href="#zzz"/>
+   <use transform="translate(750)" xlink:href="#zzz"/>
+   <use transform="translate(760)" xlink:href="#zzz"/>
+   <use transform="translate(770)" xlink:href="#zzz"/>
+   <use transform="translate(780)" xlink:href="#zzz"/>
+   <use transform="translate(790)" xlink:href="#zzz"/>
+   <use transform="translate(800)" xlink:href="#zzz"/>
+   <use transform="translate(810)" xlink:href="#zzz"/>
+   <use transform="translate(820)" xlink:href="#zzz"/>
+   <use transform="translate(830)" xlink:href="#zzz"/>
+   <use transform="translate(840)" xlink:href="#zzz"/>
+   <use transform="translate(850)" xlink:href="#zzz"/>
+   <use transform="translate(860)" xlink:href="#zzz"/>
+   <use transform="translate(870)" xlink:href="#zzz"/>
+   <use transform="translate(880)" xlink:href="#zzz"/>
+   <use transform="translate(890)" xlink:href="#zzz"/>
+   <use transform="translate(900)" xlink:href="#zzz"/>
+   <use transform="translate(910)" xlink:href="#zzz"/>
+   <use transform="translate(920)" xlink:href="#zzz"/>
+   <use transform="translate(930)" xlink:href="#zzz"/>
+   <use transform="translate(940)" xlink:href="#zzz"/>
+   <use transform="translate(950)" xlink:href="#zzz"/>
+   <use transform="translate(960)" xlink:href="#zzz"/>
+   <use transform="translate(970)" xlink:href="#zzz"/>
+   <g text-anchor="middle">
+    <text x="354" y="15" xml:space="preserve"><tspan>1</tspan></text>
+    <text x="394" y="15" xml:space="preserve"><tspan>2</tspan></text>
+    <text x="434" y="15" xml:space="preserve"><tspan>3</tspan></text>
+    <text x="474" y="15" xml:space="preserve"><tspan>4</tspan></text>
+    <text x="514" y="15" xml:space="preserve"><tspan>21</tspan></text>
+    <text x="554" y="15" xml:space="preserve"><tspan>22</tspan></text>
+    <text x="594" y="15" xml:space="preserve"><tspan>23</tspan></text>
+    <text x="629" y="15" xml:space="preserve"><tspan>24</tspan></text>
+   </g>
+  </g>
+  <g transform="translate(0,125)">
+   <text class="info" x="-10" y="15" text-anchor="end" xml:space="preserve"><tspan>DI</tspan></text>
+   <use xlink:href="#zzz"/>
+   <use transform="translate(10)" xlink:href="#zzz"/>
+   <use transform="translate(20)" xlink:href="#zzz"/>
+   <use transform="translate(30)" xlink:href="#zzz"/>
+   <use transform="translate(40)" xlink:href="#zzz"/>
+   <use transform="translate(50)" xlink:href="#zzz"/>
+   <use transform="translate(60)" xlink:href="#zzz"/>
+   <use transform="translate(70)" xlink:href="#zzz"/>
+   <use transform="translate(80)" xlink:href="#zzz"/>
+   <use transform="translate(90)" xlink:href="#zzz"/>
+   <use transform="translate(100)" xlink:href="#zzz"/>
+   <use transform="translate(110)" xlink:href="#zzz"/>
+   <use transform="translate(120)" xlink:href="#zzz"/>
+   <use transform="translate(130)" xlink:href="#zzz"/>
+   <use transform="translate(140)" xlink:href="#zzz"/>
+   <use transform="translate(150)" xlink:href="#zzz"/>
+   <use transform="translate(160)" xlink:href="#zzz"/>
+   <use transform="translate(170)" xlink:href="#zzz"/>
+   <use transform="translate(180)" xlink:href="#zzz"/>
+   <use transform="translate(190)" xlink:href="#zzz"/>
+   <use transform="translate(200)" xlink:href="#zzz"/>
+   <use transform="translate(210)" xlink:href="#zzz"/>
+   <use transform="translate(220)" xlink:href="#zzz"/>
+   <use transform="translate(230)" xlink:href="#zzz"/>
+   <use transform="translate(240)" xlink:href="#zzz"/>
+   <use transform="translate(250)" xlink:href="#zzz"/>
+   <use transform="translate(260)" xlink:href="#zzz"/>
+   <use transform="translate(270)" xlink:href="#zzz"/>
+   <use transform="translate(280)" xlink:href="#zzz"/>
+   <use transform="translate(290)" xlink:href="#zzz"/>
+   <use transform="translate(300)" xlink:href="#zzz"/>
+   <use transform="translate(310)" xlink:href="#zzz"/>
+   <use transform="translate(320)" xlink:href="#zzz"/>
+   <use transform="translate(330)" xlink:href="#zzz"/>
+   <use transform="translate(340)" xlink:href="#zzz"/>
+   <use transform="translate(350)" xlink:href="#zzz"/>
+   <use transform="translate(360)" xlink:href="#zzz"/>
+   <use transform="translate(370)" xlink:href="#zzz"/>
+   <use transform="translate(380)" xlink:href="#zzz"/>
+   <use transform="translate(390)" xlink:href="#zzz"/>
+   <use transform="translate(400)" xlink:href="#zzz"/>
+   <use transform="translate(410)" xlink:href="#zzz"/>
+   <use transform="translate(420)" xlink:href="#zzz"/>
+   <use transform="translate(430)" xlink:href="#zzz"/>
+   <use transform="translate(440)" xlink:href="#zzz"/>
+   <use transform="translate(450)" xlink:href="#zzz"/>
+   <use transform="translate(460)" xlink:href="#zzz"/>
+   <use transform="translate(470)" xlink:href="#zzz"/>
+   <use transform="translate(480)" xlink:href="#zzz"/>
+   <use transform="translate(490)" xlink:href="#zzz"/>
+   <use transform="translate(500)" xlink:href="#zzz"/>
+   <use transform="translate(510)" xlink:href="#zzz"/>
+   <use transform="translate(520)" xlink:href="#zzz"/>
+   <use transform="translate(530)" xlink:href="#zzz"/>
+   <use transform="translate(540)" xlink:href="#zzz"/>
+   <use transform="translate(550)" xlink:href="#zzz"/>
+   <use transform="translate(560)" xlink:href="#zzz"/>
+   <use transform="translate(570)" xlink:href="#zzz"/>
+   <use transform="translate(580)" xlink:href="#zzz"/>
+   <use transform="translate(590)" xlink:href="#zzz"/>
+   <use transform="translate(600)" xlink:href="#zzz"/>
+   <use transform="translate(610)" xlink:href="#zzz"/>
+   <use transform="translate(620)" xlink:href="#zzz"/>
+   <use transform="translate(630)" xlink:href="#zzz"/>
+   <use transform="translate(640)" xlink:href="#zzz"/>
+   <use transform="translate(650)" xlink:href="#zmv-5"/>
+   <use transform="translate(660)" xlink:href="#vvv-5"/>
+   <use transform="translate(670)" xlink:href="#vvv-5"/>
+   <use transform="translate(680)" xlink:href="#vvv-5"/>
+   <use transform="translate(690)" xlink:href="#vmv-5-5"/>
+   <use transform="translate(700)" xlink:href="#vvv-5"/>
+   <use transform="translate(710)" xlink:href="#vvv-5"/>
+   <use transform="translate(720)" xlink:href="#vvv-5"/>
+   <use transform="translate(730)" xlink:href="#vmv-5-5"/>
+   <use transform="translate(740)" xlink:href="#vvv-5"/>
+   <use transform="translate(750)" xlink:href="#vvv-5"/>
+   <use transform="translate(760)" xlink:href="#vvv-5"/>
+   <use transform="translate(770)" xlink:href="#vmv-5-5"/>
+   <use transform="translate(780)" xlink:href="#vvv-5"/>
+   <use transform="translate(790)" xlink:href="#vvv-5"/>
+   <use transform="translate(800)" xlink:href="#vvv-5"/>
+   <use transform="translate(810)" xlink:href="#vmv-5-5"/>
+   <use transform="translate(820)" xlink:href="#vvv-5"/>
+   <use transform="translate(830)" xlink:href="#vvv-5"/>
+   <use transform="translate(840)" xlink:href="#vvv-5"/>
+   <use transform="translate(850)" xlink:href="#vmv-5-5"/>
+   <use transform="translate(860)" xlink:href="#vvv-5"/>
+   <use transform="translate(870)" xlink:href="#vvv-5"/>
+   <use transform="translate(880)" xlink:href="#vvv-5"/>
+   <use transform="translate(890)" xlink:href="#vmv-5-5"/>
+   <use transform="translate(900)" xlink:href="#vvv-5"/>
+   <use transform="translate(910)" xlink:href="#vvv-5"/>
+   <use transform="translate(920)" xlink:href="#vvv-5"/>
+   <use transform="translate(930)" xlink:href="#vmv-5-5"/>
+   <use transform="translate(940)" xlink:href="#vvv-5"/>
+   <use transform="translate(950)" xlink:href="#vvv-5"/>
+   <use transform="translate(960)" xlink:href="#vmz-5"/>
+   <use transform="translate(970)" xlink:href="#zzz"/>
+   <g text-anchor="middle">
+    <text x="674" y="15" xml:space="preserve"><tspan>1</tspan></text>
+    <text x="714" y="15" xml:space="preserve"><tspan>2</tspan></text>
+    <text x="754" y="15" xml:space="preserve"><tspan>3</tspan></text>
+    <text x="794" y="15" xml:space="preserve"><tspan>4</tspan></text>
+    <text x="834" y="15" xml:space="preserve"><tspan>29</tspan></text>
+    <text x="874" y="15" xml:space="preserve"><tspan>30</tspan></text>
+    <text x="914" y="15" xml:space="preserve"><tspan>31</tspan></text>
+    <text x="949" y="15" xml:space="preserve"><tspan>32</tspan></text>
+   </g>
+  </g>
+  <path id="gmark_A_B" d="m14 75h630" style="fill:none;marker-end:url(#arrowhead);marker-start:url(#arrowtail);stroke:#0041c4"/>
+  <g transform="translate(329,75)">
+   <rect x="-169" y="-5" width="339.48" height="11" style="fill:#808080"/>
+   <text y="3" text-anchor="middle" style="font-size:11px"><tspan>Command = 8 Bits of Instruction (0x3) + 24 Bits of Address</tspan></text>
+  </g>
+  <path id="gmark_C_D" d="m654 75h320" style="fill:none;marker-end:url(#arrowhead);marker-start:url(#arrowtail);stroke:#0041c4"/>
+  <g transform="translate(814,75)">
+   <rect x="-42" y="-5" width="85.93" height="11" style="fill:#808080"/>
+   <text y="3" text-anchor="middle" style="font-size:11px"><tspan>32 Bits of Data</tspan></text>
+  </g>
+  <g transform="translate(0,35)">
+   <use transform="translate(475)" xlink:href="#gap"/>
+   <use transform="translate(795)" xlink:href="#gap"/>
+  </g>
+  <g transform="translate(0,95)">
+   <use transform="translate(475)" xlink:href="#gap"/>
+  </g>
+  <g transform="translate(0,125)">
+   <use transform="translate(795)" xlink:href="#gap"/>
+  </g>
+ </g>
+</svg>

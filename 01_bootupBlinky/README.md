@@ -111,7 +111,7 @@ However, note that VMA(virtual memory address)/LMA(load memory address) for all 
 If you have worked on a multi file C/C++ project then you'd know that the job of a Linker is to merge multiple object files into an executable file and resolve symbol references. In case of an embedded system, the Linker performs one more essential task of defining appropriate locations for different sections of a program. To figure out which sections go where, the Linker relies on a Linker Script - a blueprint for your program. An awesome discussion on Linker Scripts is provided by [François Baldassari](https://github.com/franc0is) in his blog [From Zero to main(): Demystifying Firmware Linker Scripts](https://interrupt.memfault.com/blog/how-to-write-linker-scripts-for-firmware#from-zero-to-main-demystifying-firmware-linker-scripts). This section discusses Linker Scripts in a very concise manner.
 
 The current goal, as discussed in [The Two Stage Booting Process](#the-two-stage-booting-process), is to put the code at the start of the Flash. Let's consider the following Linker Script for this
-``` {.numberLines}
+```ld {.numberLines}
 ENTRY(bootStage2);
 
 MEMORY
@@ -218,7 +218,7 @@ Now that we have computed a valid CRC checksum for the Boot Stage 2 code, both t
 __attribute__((section(".boot2"))) void bootStage2(void)
 ```
 Similar to what was done with the `crc` array, `__attribute__((section(".boot2")))` instructs the compiler to put the `bootStage2` function into a special section called `.boot2`. The reason of doing this is also to gain the flexibility of putting this function at the start of the Flash. This will become important in the upcoming tutorials where this `.boot2` section will actually contain the code that sets up the Execute-In-Place (XIP) peripheral so that the rest of the firmware can execute directly from the Flash. This way, the second stage bootloader can be differentiated from the `.text` sections of other C/C++ code.
-```
+```ld {.numberLines}
 ENTRY(bootStage2);
 
 MEMORY
