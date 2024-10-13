@@ -87,10 +87,10 @@ Consider the following C code, which would go in the new `bootStage2.c` file.
 #define XIP_BASE                    (0x10000000)
 // SSI
 #define SSI_BASE                    (0x18000000)
-#define SSI_CTRLR0                  (*(uint32_t *) (SSI_BASE + 0x000))
-#define SSI_SSIENR                  (*(uint32_t *) (SSI_BASE + 0x008))
-#define SSI_BAUDR                   (*(uint32_t *) (SSI_BASE + 0x014))
-#define SSI_SPI_CTRLR0              (*(uint32_t *) (SSI_BASE + 0x0f4))
+#define SSI_CTRLR0                  (*(volatile uint32_t *) (SSI_BASE + 0x000))
+#define SSI_SSIENR                  (*(volatile uint32_t *) (SSI_BASE + 0x008))
+#define SSI_BAUDR                   (*(volatile uint32_t *) (SSI_BASE + 0x014))
+#define SSI_SPI_CTRLR0              (*(volatile uint32_t *) (SSI_BASE + 0x0f4))
 
 // A brief list of steps to take
 // 1. Setup IO_QSPI pins for XIP

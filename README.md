@@ -76,7 +76,7 @@ There are five common operations done on registers,
 
 A register is shown to be accessed using `*(uint32_t *)` pointer casting method in this section. There are two things to note here,
 1. Use of `uint32_t` - The &micro;C used here is a 32-bit &micro;C. Meaning that all the registers in the &micro;C are 32-bit wide. Thus, a fixed length (32-bit wide) data type (`uint32_t`) is used to let the compiler know that the value being accessed is 32-bits in size.
-2. A missing `volatile` keyword - Technically speaking, register accesses should always accompany `volatile` keyword, e.g. `(volatile uint32_t *) (REGISTER_ADDR) |= 1 << bitLocation`. This keyword lets the compiler know that the value stored at this address may change by means other than the code, i.e. the hardware itself can change its state. This prevents some optimizations from being applied at the compile time. The effect of this is discussed in [Chap ?](./unknown_codeOptimizations/).
+2. A missing `volatile` keyword - Technically speaking, register accesses should always accompany `volatile` keyword, e.g. `(volatile uint32_t *) (REGISTER_ADDR) |= 1 << bitLocation`. This keyword lets the compiler know that the value stored at this address may change by means other than the code, i.e. the hardware itself can change its state. This prevents some optimizations from being applied at the compile time. The effect of this is discussed in Tutorial 1.
 
 ### How an Arm<sup>&copy;</sup> &micro;C boots up?
 When an Arm<sup>&copy;</sup> &micro;C boots, it reads a so-called *vector table* from the beginning of Flash. A vector table is a concept common to all Arm<sup>&copy;</sup> &micro;Cs. That is an array of 32-bit addresses of interrupt handlers (event driven functions). First 16 entries are reserved by Arm<sup>&copy;</sup> and are common to all Arm<sup>&copy;</sup> &micro;Cs. The rest of interrupt handlers are specific to the given &micro;C - these are interrupt handlers for peripherals. Simpler &micro;Cs with few peripherals have few interrupt handlers, and more complex &micro;Cs have many.
@@ -86,3 +86,12 @@ Every entry in the vector table is an address of a function that &micro;C execut
 So now we know, that if the firmware is composed in a way that the 2nd 32-bit value in the flash contain an address of the boot function, then the &micro;C will read that address and jump to the boot function when it is powered on.
 
 Unfortunately, RP2040 is an exception here. It doesn't follow this simplified procedure of booting and relies on something much more complicated in order provide some features that other &micro;Cs don't provide out of the box. The [first tutorial](./01_bootupBlinky/README.md) in this series of bare-metal programming deals with this very issue.
+
+## Outline
+1. **RP2040 Boot Up Process** - Discusses the two stage boot-up process of RP2040. Blinky code in first 256 bytes of flash, CRC32 calculation, linker script and Makefile.
+2. **Execute Code from Flash** - Discusses how SPI Flash and XIP peripheral works together. RP2040 is setup to execute code directly from Flash with Flash in standard SPI mode.
+3. **Boot Like Any Other Arm<sup>&copy;</sup> &micro;C** - A discussion of standard Arm<sup>&copy;</sup> boot-up process is provided and the Second Stage boot-loader prepared in previous section is made to behave in the same way. The idea of vector table and exception handling is introduced.
+4. **Placement of Data** (WIP) - Discussion about significance and placement of `.data`, `.bss` and `.rodata` sections is provided. Global, initialized, uninitialized and constant variables are now working.
+5. **Peripheral Library** (WIP) - Introduction to implementing macros, structures and functions for a peripheral using UART as an example.
+6. **Standard C Functionality** (WIP) - Add stub functions for `newlib` to make stack, heap and I/O work. This allows usage of `malloc`, `printf`, `strlen`, etc. possible.
+7. **Switch Gears into C++** (WIP) - Add any necessary changes to allow C++ code to execute properly.

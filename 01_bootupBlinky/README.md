@@ -363,4 +363,18 @@ There are three things to note here.
 2. The `Makefile` is designed to produce all the new files into a `build` directory and copy only the `boot2Blinky.uf2` to the current directory. This keeps the current folder clean and manageable.
 3. An extra recipe called `clean` is provided which is not a raw material for the `build` recipe. Its job is to delete the `build` directory and the `boot2Blinky.uf2`.
 
-This folder is now ready to serve as a starting point for creating a working Second Stage Bootloader.
+### Respect the Constraints
+&micro;Cs are quite limited in terms of resources whether it be clock speed, RAM size or availability of Flash. Thus, it is always desirable that the code being written is optimized to reduce the size of the final binary, improve the RAM usage and conserve processor clock cycles. Fortunately, you don't have to do too much to achieve this, the compiler and the linker will do this for you. Do following changes in the `Makefile` provided here to optimize your code,
+```make
+CFLAGS ?= -mcpu=cortex-m0plus -O3
+LDFLAGS ?= -T link.ld -nostdlib -O3
+```
+Now take a look at the `boot2Blinky_temp.objdump`. You'd see that the size of the `.boot2` section has shrunk down to `0x38` from `0x60`. This is 41% reduction in code size. That's huge! However, if you try to execute this code on the &micro;C, it'll not run (or at least it won't run as expected). This is because the optimizations are being applied to the register accesses as well. A register's value can change without the code/software explicitly changing it. This information needs to be provided to the compiler. Because of this, all the register macros need to contain `volatile` keyword as shown below,
+```C
+#define RESETS_RESET *(volatile uint32_t *) (0x4000c000)
+```
+Make such change to all the register macros and compile the code again. This time you'd see that the size of `.boot2` section has increased to `0x44`, which is 29% smaller than the original size. This is still significant improvement in code size.
+
+If you run the code now, you should the LED blinking again. But wait, something has changed, the LED blinks faster now. This is because the number of instructions used or the type of instructions used makes the execution of one `while` loop complete much faster than before. In other words, less clock cycles are used to perform the same operations, hence the code runs faster. The qualitative analysis of the computational improvement is not possible at this stage, so this will be discussed in some other tutorial.
+
+This folder is now ready to serve as a starting point for creating a working Second Stage Boot-loader.

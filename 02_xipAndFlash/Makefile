@@ -21,8 +21,8 @@ GPP = $(TOOLCHAIN)g++
 LNK = $(TOOLCHAIN)ld
 DMP = $(TOOLCHAIN)objdump
 CPY = $(TOOLCHAIN)objcopy
-GCCFLAGS ?= -mcpu=cortex-m0plus
-LNKFLAGS ?= -T $(LNKSCRIPT) -nostdlib
+GCCFLAGS ?= -mcpu=cortex-m0plus -O3
+LNKFLAGS ?= -T $(LNKSCRIPT) -nostdlib -O3
 
 # Utilities path
 UTILS = ../utils

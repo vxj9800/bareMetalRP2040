@@ -2,10 +2,10 @@
 #include <stdbool.h>
 
 // Define necessary register addresses
-#define RESETS_RESET                                    *(uint32_t *) (0x4000c000)
-#define IO_BANK0_GPIO25_CTRL                            *(uint32_t *) (0x400140cc)
-#define SIO_GPIO_OE_SET                                 *(uint32_t *) (0xd0000024)
-#define SIO_GPIO_OUT_XOR                                *(uint32_t *) (0xd000001c)
+#define RESETS_RESET                                    *(volatile uint32_t *) (0x4000c000)
+#define IO_BANK0_GPIO25_CTRL                            *(volatile uint32_t *) (0x400140cc)
+#define SIO_GPIO_OE_SET                                 *(volatile uint32_t *) (0xd0000024)
+#define SIO_GPIO_OUT_XOR                                *(volatile uint32_t *) (0xd000001c)
 
 // Define the initial stack pointer, the value will be provided by the linker
 extern void _sstack();
