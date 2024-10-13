@@ -27,21 +27,12 @@ __attribute__((naked, noreturn, section(".boot2"))) void bootStage2(void)
     //  - Set SCLK and SS to OE
     //  - Set all IO_QSPI GPIOs function to XIP
 
-    // 2. Setup SSI interface, Section 4.10.3
-    // Make sure SSI is not enabled before configuration is completed
-    SSI_SSIENR &= ~(1 << 0);
-
-    // Set clock divider to f_ssi / f_sclk = 125MHz / 33MHz = 4
-    SSI_BAUDR = 4;
-
-    // Setup SPI communication
-    SSI_CTRLR0 |= (3 << 8) | (31 << 16); // Put SPI communication into EEPROM mode and set 32 clocks per data frame
-
-    // Setup XIP specific options
+    // 2. Setup SSI interface
+    SSI_SSIENR &= ~(1 << 0); // Disable SSI to configure it
+    SSI_BAUDR = 4; // Set clock divider to 4
+    SSI_CTRLR0 |= (3 << 8) | (31 << 16); // Set EEPROM mode and 32 clocks per data frame
     SSI_SPI_CTRLR0 |= (6 << 2) | (2 << 8) | (0x03 << 24); // Set address length to 24-bits, instruction length to 8-bits and command to Read Data (03h)
-
-    // Enable SSI
-    SSI_SSIENR |= 1 << 0;
+    SSI_SSIENR |= 1 << 0; // Enable SSI
 
     // 3. Enable XIP Cache
     // It is enabled by default. Take a look at https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=128

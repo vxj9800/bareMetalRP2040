@@ -14,8 +14,6 @@ int main(void)
     IO_BANK0_GPIO25_CTRL = 5; // Set GPIO 25 function to SIO
     SIO_GPIO_OE_SET |= 1 << 25; // Set output enable for GPIO 25 in SIO
 
-    *(uint32_t *) (0xf0000000) = 10;
-
     while (true)
     {
         for (uint32_t i = 0; i < 100000; ++i); // Wait for some time
