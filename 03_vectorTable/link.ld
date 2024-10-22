@@ -1,7 +1,6 @@
 ENTRY(bootStage2);
 
-/* Define Stack Size */
-STACK_SIZE = 0x20000;
+STACK_SIZE = 0x20000; /* Define Stack Size */
 
 MEMORY
 {
@@ -13,11 +12,13 @@ SECTIONS
 {
     .boot2 :
     {
+        _sboot2 = .;
         *(.boot2*)
-        . = ORIGIN(flash) + 252;
+        _eboot2 = .;
+        . = . + (252 - (_eboot2 - _sboot2));
         *(.crc*)
     } > flash
-
+    
     .text :
     {
         *(.vector*)

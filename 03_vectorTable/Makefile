@@ -4,6 +4,8 @@ PROJECT = flashBlinky
 # Boot Stage 2 code files
 BOOT2DIR = boot2
 BOOT2 = bootStage2
+# BOOT2 = bootStage2QuadOut
+# BOOT2 = bootStage2QuadIO
 COMPCRC = compCrc32
 CRCVALUE = crc
 
@@ -27,32 +29,30 @@ LNKFLAGS ?= -T $(LNKSCRIPT) -nostdlib -O3
 # Utilities path
 UTILS = ../utils
 
-build: makeDir $(BUILDBOOT2DIR)/$(BOOT2).o $(BUILDBOOT2DIR)/$(CRCVALUE).o $(BUILDDIR)/$(PROJECT).bin $(BUILDDIR)/$(PROJECT).uf2 copyUF2
+build: makeDir $(BUILDBOOT2DIR)/$(BOOT2).elf $(BUILDBOOT2DIR)/$(CRCVALUE).c $(BUILDDIR)/$(PROJECT).elf $(BUILDDIR)/$(PROJECT).uf2 copyUF2
 
 makeDir:
 	mkdir -p $(BUILDBOOT2DIR)
 
-# Compile bootStage2
-$(BUILDBOOT2DIR)/$(BOOT2).o: $(BOOT2DIR)/$(BOOT2).c
-	cp $(BOOT2DIR)/$(BOOT2).c $(BUILDBOOT2DIR)/$(BOOT2).c
-	$(GCC) $(BUILDBOOT2DIR)/$(BOOT2).c $(GCCFLAGS) -c -o $@
-	$(DMP) -hSD $(BUILDBOOT2DIR)/$(BOOT2).o > $(BUILDBOOT2DIR)/$(BOOT2).objdump
+# Compile bootStage2 with linking
+$(BUILDBOOT2DIR)/$(BOOT2).elf: $(BOOT2DIR)/$(BOOT2).c
+	$(GCC) $(BOOT2DIR)/$(BOOT2).c $(GCCFLAGS) $(LNKFLAGS) -o $@
+	$(DMP) -hSD $(BUILDBOOT2DIR)/$(BOOT2).elf > $(BUILDBOOT2DIR)/$(BOOT2).objdump
 
-# Compute CRC32 value and compile it
-$(BUILDBOOT2DIR)/$(CRCVALUE).o: $(BUILDBOOT2DIR)/$(BOOT2).o $(BOOT2DIR)/$(COMPCRC).cpp $(UTILS)/CRCpp/inc/CRC.h
-	$(CPY) -O binary $(BUILDBOOT2DIR)/$(BOOT2).o $(BUILDBOOT2DIR)/$(BOOT2).bin
+# Compute CRC32 value and generate a c code for it
+$(BUILDBOOT2DIR)/$(CRCVALUE).c: $(BUILDBOOT2DIR)/$(BOOT2).elf $(BOOT2DIR)/$(COMPCRC).cpp $(UTILS)/CRCpp/inc/CRC.h
+	$(CPY) -O binary $(BUILDBOOT2DIR)/$(BOOT2).elf $(BUILDBOOT2DIR)/$(BOOT2).bin
 	g++ -I $(UTILS) $(BOOT2DIR)/$(COMPCRC).cpp -o $(BUILDBOOT2DIR)/$(COMPCRC).out
 	./$(BUILDBOOT2DIR)/$(COMPCRC).out $(BUILDBOOT2DIR)/$(BOOT2).bin
-	$(GCC) $(BUILDBOOT2DIR)/$(CRCVALUE).c $(GCCFLAGS) -c -o $@
 
-# Compile the project and link everything into a binary
-$(BUILDDIR)/$(PROJECT).bin: $(BUILDBOOT2DIR)/$(BOOT2).o $(BUILDBOOT2DIR)/$(CRCVALUE).o $(LNKSCRIPT)
-	$(GCC) *.c $(BUILDBOOT2DIR)/$(BOOT2).o $(BUILDBOOT2DIR)/$(CRCVALUE).o $(GCCFLAGS) $(LNKFLAGS) -o $(BUILDDIR)/$(PROJECT).elf
+# Compile the project and link everything into an elf file
+$(BUILDDIR)/$(PROJECT).elf: $(BOOT2DIR)/$(BOOT2).c $(BUILDBOOT2DIR)/$(CRCVALUE).c $(LNKSCRIPT)
+	$(GCC) *.c $(BOOT2DIR)/$(BOOT2).c $(BUILDBOOT2DIR)/$(CRCVALUE).c $(GCCFLAGS) $(LNKFLAGS) -o $@
 	$(DMP) -hSD $(BUILDDIR)/$(PROJECT).elf > $(BUILDDIR)/$(PROJECT).objdump
-	$(CPY) -O binary $(BUILDDIR)/$(PROJECT).elf $@
 
-# Convert bin to uf2 file
-$(BUILDDIR)/$(PROJECT).uf2: $(BUILDDIR)/$(PROJECT).bin
+# Convert elf to bin to uf2 file
+$(BUILDDIR)/$(PROJECT).uf2: $(BUILDDIR)/$(PROJECT).elf
+	$(CPY) -O binary $(BUILDDIR)/$(PROJECT).elf $(BUILDDIR)/$(PROJECT).bin
 	python3 $(UTILS)/uf2/utils/uf2conv.py -b 0x10000000 -f 0xe48bff56 -c $(BUILDDIR)/$(PROJECT).bin -o $@
 
 copyUF2: $(BUILDDIR)/$(PROJECT).uf2

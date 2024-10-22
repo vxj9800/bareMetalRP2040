@@ -38,9 +38,9 @@ This code is trying to blink the LED attached with GPIO25 on Pi Pico. Your first
 ### The Two Stage Booting Process
 Even though this code may look relatively small and simple, getting it to run on RP2040 requires much more than just this code. Opposite to what was discussed for Arm<sup>&copy;</sup> &micro;C boot up process on the [main page](../README.md), RP2040 goes through a Two-Stage booting process. A very good resource on this booting process is [V. Hunter Adams's](https://vanhunteradams.com/) discussion on the [topic](https://vanhunteradams.com/Pico/Bootloader/Boot_sequence.html), which is also used to write next couple of paragraphs.
 
-The RP2040 datasheet separates the [boot sequence](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=131) into the *hardware-controlled* section, which happens before the processors begins executing the [*bootrom*](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=132), and the *processor-controlled* section, during which processor cores 0 and 1 begin to execute the *bootrom*. This is the first stage of the booting process. The second stage of the booting process, which lives at the beginning of the user's program, is then executed from the *bootrom*.
+The RP2040 datasheet separates the [boot sequence](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=131) into the *hardware-controlled* section, which happens before the processors begins executing the [`bootrom`](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=132), and the *processor-controlled* section, during which processor cores 0 and 1 begin to execute the `bootrom`. This is the first stage of the booting process. The second stage of the booting process, which lives at the beginning of the user's program, is then executed from the `bootrom`.
 
-The hardware-controlled section is not important for us since its job is to safely turn on the minimum number of peripherals required for the processors to begin executing code, and not actually executing the code. The processor-controlled boot sequence runs from [bootrom](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=132). This sequence is *baked in* to the RP2040 chip. Following is the simplified version of the bootrom's workflow,
+The hardware-controlled section is not important for us since its job is to safely turn on the minimum number of peripherals required for the processors to begin executing code, and not actually executing the code. The processor-controlled boot sequence runs from [`bootrom`](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=132). This sequence is *baked in* to the RP2040 chip. Following is the simplified version of the `bootrom`'s workflow,
 
 - If `BOOTSEL` button is not pressed then,
     - Load first 256 bytes from the Flash into the SRAM.
@@ -52,7 +52,7 @@ Note that three conditions need to be satisfied for running the `bootStage2` fun
 
 1. The function has to be **smaller than 256 bytes** in size, 252 bytes actually.
 2. It needs to exist at the **start of the Flash**.
-3. The code in bootrom should see it (the first 256 bytes of flash) as **valid**.
+3. The code in `bootrom` should see it (the first 256 bytes of flash) as **valid**.
 
 Let's tackle one problem at a time.
 
@@ -186,7 +186,7 @@ However, what happened to placing the `.text` section at the start of the Flash?
 ### Making the Program Valid
 As discussed previously, if the `BOOTSEL` button is not pressed then the &micro;C will load the first 256 Bytes of Flash into SRAM and start executing it after checking its validity. Since the binary generated so far is only 96 Bytes, it can easily be executed if the Pi Pico thinks it is valid.
 
-To check the validity, the code in bootrom computes a CRC32 checksum of the first 252 Bytes and compares it with the last 4 Bytes of the 256 Bytes it has loaded from Flash to SRAM. If the computed CRC32 checksum matches with the last 4 Bytes, then the 252 Bytes are assumed to be a valid code and it starts executing from the top. Hence the goal in this section is to somehow convert the 96 Bytes binary into a 256 Bytes one and make sure that the last 4 Bytes contain a CRC32 checksum of the first 252 Bytes.
+To check the validity, the code in `bootrom` computes a CRC32 checksum of the first 252 Bytes and compares it with the last 4 Bytes of the 256 Bytes it has loaded from Flash to SRAM. If the computed CRC32 checksum matches with the last 4 Bytes, then the 252 Bytes are assumed to be a valid code and it starts executing from the top. Hence the goal in this section is to somehow convert the 96 Bytes binary into a 256 Bytes one and make sure that the last 4 Bytes contain a CRC32 checksum of the first 252 Bytes.
 
 Calculation of CRC32 checksum is a big topic in itself and is not in the scope of this guide. To avoid going into too much detail, an open-source CRC calculation library called [CRCpp](https://github.com/d-bahr/CRCpp) is used here. Consider the [compCrc32.cpp](./compCrc32.cpp) file. You'll see that majority of the code here loads the contents of the binary file into a 252 Bytes long array, which is zero-initialized. After that, at line 57, the CRC32 checksum is calculated using the library discussed previously.
 ```C++
@@ -194,7 +194,7 @@ Calculation of CRC32 checksum is a big topic in itself and is not in the scope o
 unsigned char crc[4] = {0};
 *reinterpret_cast<std::uint32_t*>(crc) = CRC::Calculate(binFileData, 252, CRC::CRC_32_MPEG2());
 ```
-Note the use of `CRC_32_MPEG2()` in the code above. There exists multiple parameters in CRC32 calculation which would result in different CRC32 checksum. The parameters used by bootrom in RP2040 are discussed in [Section 2.8.1.3.1](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=134) of the RP2040 datasheet. These specific set of parameters correspond to [CRC-32/MPEG-2](https://crccalc.com/?method=CRC-32/MPEG-2) algorithm.
+Note the use of `CRC_32_MPEG2()` in the code above. There exists multiple parameters in CRC32 calculation which would result in different CRC32 checksum. The parameters used by `bootrom` in RP2040 are discussed in [Section 2.8.1.3.1](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=134) of the RP2040 datasheet. These specific set of parameters correspond to [CRC-32/MPEG-2](https://crccalc.com/?method=CRC-32/MPEG-2) algorithm.
 
 Finally, the 4 Bytes of CRC checksum is output into a `crc.c` file. For this specific case, the resulting `crc.c` fill should contain the following,
 ```C {.numberLines}
@@ -276,7 +276,7 @@ we see that the first section in the ELF header is now `.text` with size `0x0000
 Now we have a valid program that can be executed by the &micro;C. But wait, how will this binary be loaded into the Flash of Pi Pico? This is where one more level of complexity exists.
 
 ### The UF2 File Format
-UF2 (USB Flashing Format) is designed by Microsoft to be suitable for flashing &micro;C over MSC (Mass Storage Class; aka removable flash drive). Thus, to make the programmer's life easier, the bootrom of RP2040 is designed to be able to read a UF2 file in USB Mass Storage mode, and transfer the program into the Flash attached externally to the RP2040. However, to even be able to send the program to the &micro;C, the binary file needs to be converted into a UF2 file. Fortunately, Microsoft's [uf2](https://github.com/microsoft/uf2) contains utilities that allow us to do this pretty quickly.
+UF2 (USB Flashing Format) is designed by Microsoft to be suitable for flashing &micro;C over MSC (Mass Storage Class; aka removable flash drive). Thus, to make the programmer's life easier, the `bootrom` of RP2040 is designed to be able to read a UF2 file in USB Mass Storage mode, and transfer the program into the Flash attached externally to the RP2040. However, to even be able to send the program to the &micro;C, the binary file needs to be converted into a UF2 file. Fortunately, Microsoft's [uf2](https://github.com/microsoft/uf2) contains utilities that allow us to do this pretty quickly.
 
 To convert the `boot2Blinky.bin` file into `boot2Blinky.uf2`, first clone the [uf2](https://github.com/microsoft/uf2) repo into the directory that contains the `boot2Blinky.bin` file.
 ```bash

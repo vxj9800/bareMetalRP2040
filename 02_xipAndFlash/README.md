@@ -1,7 +1,7 @@
 ## 2. Execute Code from Flash 
-In the last chapter, you learned the boot-up process of RP2040 &micro;C. In summary, the process is relatively simple, the bootrom verifies that the first 256 Bytes in Flash is valid, loads it into RAM and start executing it. But, the RP2040 can work with any Flash chip that can communicate over SPI protocol and is smaller than 16 MBytes in size. The development board used in these tutorials (Pi Pico) has 2 MBytes of Flash. It also means that it should be able to execute a program that is larger than 256 Bytes.
+In the last chapter, you learned the boot-up process of RP2040 &micro;C. In summary, the process is relatively simple, the `bootrom` verifies that the first 256 Bytes in Flash is valid, loads it into RAM and start executing it. But, the RP2040 can work with any Flash chip that can communicate over SPI protocol and is smaller than 16 MBytes in size. The development board used in these tutorials (Pi Pico) has 2 MBytes of Flash. It also means that it should be able to execute a program that is larger than 256 Bytes.
 
-RP2040 contains XIP (Execute-In-Place) peripheral to allow processor to fetch instructions directly from Flash. The idea is simple, convert the read accesses requests from the processor into SPI commands. Thus, XIP acts as a Bus-To-SPI translation layer between the RP2040's processor and a Flash that can communicate over SPI. The goal of this chapter is to setup XIP such that the code can be executed directly from Flash. In fact, the 256 Bytes code that is loaded to RAM by bootrom and executed, is technically supposed to configure XIP, this is by design.
+RP2040 contains XIP (Execute-In-Place) peripheral to allow processor to fetch instructions directly from Flash. The idea is simple, convert the read accesses requests from the processor into SPI commands. Thus, XIP acts as a Bus-To-SPI translation layer between the RP2040's processor and a Flash that can communicate over SPI. The goal of this chapter is to setup XIP such that the code can be executed directly from Flash. In fact, the 256 Bytes code that is loaded to RAM by `bootrom` and executed, is technically supposed to configure XIP, this is by design.
 
 ### SPI Protocol
 Let's first brush-up on Serial Peripheral Interface (SPI) before discussing its variants Double-SPI and Quad-SPI.
@@ -30,7 +30,7 @@ You might have achieved something similar to what is shown in the diagrams above
 - [W25Q80DV Flash Datasheet, Chapters 6-8](https://www.winbond.com/resource-files/w25q80dv%20dl_revh_10022015.pdf#page=11)
 
 ### Let's Start Slow
-Reading the Flash datasheet, you'll very quickly learn, in Chapter 6, that it can work with three variants of SPI; Standard SPI, Dual SPI and Quad SPI; in modes 0 and 3. Let's stick to Standard SPI in mode 0 for now. It also contains registers like `CONTROL` and `STATUS` that would require special attention. With the goal of reading the instructions from Flash in mind, you'd soon realize that you just have to make the &micro;C spit out the [*Read Data* (`0x3`)](https://www.winbond.com/resource-files/w25q80dv%20dl_revh_10022015.pdf#page=26) instruction along with the appropriate address and you'd receive the program instructions stored in the Flash back. Following diagram shows the SPI message associated with such an interaction.
+Reading the Flash datasheet, you'll very quickly learn, in Chapter 6, that it can work with three variants of SPI; Standard SPI, Dual SPI and Quad SPI; in modes 0 and 3. Let's stick to Standard SPI in mode 0 for now. It also contains registers like `CONTROL` and `STATUS` that would require special attention. With the goal of reading the instructions from Flash in mind, you'd soon realize that you just have to make the &micro;C spit out the [*Read Data* (`0x3`)](https://www.winbond.com/resource-files/w25q80dv%20dl_revh_10022015.pdf#page=26) instruction along with the appropriate address and the Flash will return the program instructions stored at that address. Following diagram shows the SPI message associated with such an interaction.
 ![image](../misc/figs/chap2/flashReadData.svg)
 
 Unfortunately, the discussion in RP2040's Datasheet is not that easy to follow. Regardless, on the &micro;C's side, you'd notice that almost every important aspect of this communication is handled by three registers,
@@ -73,8 +73,8 @@ To put everything discussed so far into a working firmware, let's first copy the
 4. Create a new file called `bootStage2.c` in `boot2` sub-folder.
 
 The complete process can now be described as follows,
-1. bootrom checks whether first 256 Bytes (which contains `bootStage2` function) of Flash is valid or not.
-2. If it is then it loads those 256 Bytes into RAM and executes it.
+1. `bootrom` checks whether first 256 Bytes (which contains `bootStage2` function) of Flash is valid or not.
+2. If it is, then `bootrom` loads those 256 Bytes into RAM and executes it.
 3. The `bootStage2` function sets up XIP peripheral, to allow processor to fetch instructions directly from Flash, and then jumps to the `main` function.
 
 Consider the following C code, which would go in the new `bootStage2.c` file.
@@ -100,7 +100,7 @@ Consider the following C code, which would go in the new `bootStage2.c` file.
 // Boot stage 2 entry point
 __attribute__((section(".boot2"))) void bootStage2(void)
 {
-    // 1. Setup IO_QSPI pins for XIP (already done by bootrom)
+    // 1. Setup IO_QSPI pins for XIP (already done by `bootrom`)
     //  - Bring IO_QSPI out of reset state
     //  - Set SCLK and SS to OE
     //  - Set all IO_QSPI GPIOs function to XIP
@@ -138,20 +138,22 @@ MEMORY
 
 SECTIONS
 {
-    .boot2 :                        /* Changed */
+    .boot2 :                                    /* Changed */
     {
-        *(.boot2*)
-        . = ORIGIN(flash) + 252;
-        *(.crc*)
+        _sboot2 = .;
+        *(.boot2*)                              /* bootStage2 function */
+        _eboot2 = .;
+        . = . + (252 - (_eboot2 - _sboot2));    /* Pad zeros, addCounter = addCounter + (252 - sizeOfBoot2) */
+        *(.crc*)                                /* 4 Byte CRC32 value */
     } > flash
 
-    .text :                         /* Added */
-    {                               /* Added */
-        *(.text*)                   /* Added */
-    } > flash                       /* Added */
+    .text :                                     /* Added */
+    {                                           /* Added */
+        *(.text*)                               /* Added */
+    } > flash                                   /* Added */
 }
 ```
-The only major change here compared to last tutorial is that the first 256 Bytes (`.boot2` and `.crc` sections) are now placed in a separate `.boot2` section.
+The only major change here compared to last tutorial is that the first 256 Bytes (`.boot2` and `.crc` sections) are now placed in a separate `.boot2` section. However, there are some interesting things happening in that section that needs some explanation. In a linker script, a `.` represents the current address counter. As more code/sections are added, the address counter keeps increasing based on the size of each code/section. You can also defined variables containing the value this address counter at specific locations. That's exactly what's happening in case of `_sboot2 = .` and `_eboot2 = .`. These two variables define starting and ending addresses of the `.boot2` section. These two variables are then used to pad the remaining space of first 252 Bytes with zeros in line `. = . + (252 - (_eboot2 - _sboot2));`. And finally, the `.crc` section is appended at the end.
 
 Significant changes are done in the `Makefile`. So, take a look at its content and make sure you understand what commands the `Makefile` is executing.
 
