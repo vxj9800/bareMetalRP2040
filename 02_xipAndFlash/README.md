@@ -30,7 +30,7 @@ You might have achieved something similar to what is shown in the diagrams above
 - [W25Q80DV Flash Datasheet, Chapters 6-8](https://www.winbond.com/resource-files/w25q80dv%20dl_revh_10022015.pdf#page=11)
 
 ### Let's Start Slow
-Reading the Flash datasheet, you'll very quickly learn, in Chapter 6, that it can work with three variants of SPI; Standard SPI, Dual SPI and Quad SPI; in modes 0 and 3. Let's stick to Standard SPI in mode 0 for now. It also contains registers like `CONTROL` and `STATUS` that would require special attention. With the goal of reading the instructions from Flash in mind, you'd soon realize that you just have to make the &micro;C spit out the [*Read Data* (`0x3`)](https://www.winbond.com/resource-files/w25q80dv%20dl_revh_10022015.pdf#page=26) instruction along with the appropriate address and the Flash will return the program instructions stored at that address. Following diagram shows the SPI message associated with such an interaction.
+Reading the Flash datasheet, you'll very quickly learn, in Chapter 6, that it can work with three variants of SPI; Standard SPI, Dual-SPI and Quad-SPI; in modes 0 and 3. Let's stick to Standard SPI in mode 0 for now. It also contains registers like `CONTROL` and `STATUS` that would require special attention. With the goal of reading the instructions from Flash in mind, you'd soon realize that you just have to make the &micro;C spit out the [*Read Data* (`0x3`)](https://www.winbond.com/resource-files/w25q80dv%20dl_revh_10022015.pdf#page=26) instruction along with the appropriate address and the Flash will return the program instructions stored at that address. Following diagram shows the SPI message associated with such an interaction.
 ![image](../misc/figs/chap2/flashReadData.svg)
 
 Unfortunately, the discussion in RP2040's Datasheet is not that easy to follow. Regardless, on the &micro;C's side, you'd notice that almost every important aspect of this communication is handled by three registers,
@@ -52,7 +52,7 @@ Let's look at different bits of `CTRLR0` and figure out what should go in each,
 - `SRL` - Left unchanged since enough information about this bit is not available.
 - `CFS` - Left unchanged since these bits correspond to Microwire flavor of SPI protocol, which is not being used here.
 - `DFS_32` - Set to 31 since the data from Flash is expected to be 32-bits in size.
-- `SPI_FRF` - Left unchanged, to `0x0`, since the communication is supposed to happen in Standard SPI format, not in Dual SPI or Quad SPI format.
+- `SPI_FRF` - Left unchanged, to `0x0`, since the communication is supposed to happen in Standard SPI format, not in Dual-SPI or Quad-SPI format.
 - `SSTE` - Enabling this will make the `CSn` to go high at the end of a message. The Flash used here doesn't mandate this, so it is left unchanged, to `0x0`.
 
 Let's look at the XIP related configuration in `SPI_CTRLR0`,
@@ -106,11 +106,11 @@ __attribute__((section(".boot2"))) void bootStage2(void)
     //  - Set all IO_QSPI GPIOs function to XIP
 
     // 2. Setup SSI interface
-    SSI_SSIENR &= ~(1 << 0); // Disable SSI to configure it
+    SSI_SSIENR = 0; // Disable SSI to configure it
     SSI_BAUDR = 4; // Set clock divider to 4
-    SSI_CTRLR0 |= (3 << 8) | (31 << 16); // Set EEPROM mode and 32 clocks per data frame
-    SSI_SPI_CTRLR0 |= (6 << 2) | (2 << 8) | (0x03 << 24); // Set address length to 24-bits, instruction length to 8-bits and command to Read Data (03h)
-    SSI_SSIENR |= 1 << 0; // Enable SSI
+    SSI_CTRLR0 = (3 << 8) | (31 << 16); // Set EEPROM mode and 32 clocks per data frame
+    SSI_SPI_CTRLR0 = (6 << 2) | (2 << 8) | (0x03 << 24); // Set address length to 24-bits, instruction length to 8-bits and command to Read Data (03h)
+    SSI_SSIENR = 1; // Enable SSI
 
     // 3. Enable XIP Cache
     // It is enabled by default. Take a look at https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=128
@@ -155,6 +155,136 @@ SECTIONS
 ```
 The only major change here compared to last tutorial is that the first 256 Bytes (`.boot2` and `.crc` sections) are now placed in a separate `.boot2` section. However, there are some interesting things happening in that section that needs some explanation. In a linker script, a `.` represents the current address counter. As more code/sections are added, the address counter keeps increasing based on the size of each code/section. You can also defined variables containing the value this address counter at specific locations. That's exactly what's happening in case of `_sboot2 = .` and `_eboot2 = .`. These two variables define starting and ending addresses of the `.boot2` section. These two variables are then used to pad the remaining space of first 252 Bytes with zeros in line `. = . + (252 - (_eboot2 - _sboot2));`. And finally, the `.crc` section is appended at the end.
 
-Significant changes are done in the `Makefile`. So, take a look at its content and make sure you understand what commands the `Makefile` is executing.
+> [!NOTE]  
+> Significant changes are done in the `Makefile`. So, take a look at its content and make sure you understand what commands the `Makefile` is executing.
 
 Now you should be able to generate a `*.uf2` file, upload it on the &micro;C and see the LED flashing, which is handled by the `main` function that was never loaded into RAM.
+
+### Switching Gears
+Hold on, the eventual goal of this tutorial was to use faster variants of SPI protocol right!? So, let's give Quad-SPI a shot. The high speed read instructions mentioned in [Flash documentation](https://www.winbond.com/resource-files/w25q80dv%20dl_revh_10022015.pdf#page=20) are [Fast Read Quad Output (`0x6B`)](https://www.winbond.com/resource-files/w25q80dv%20dl_revh_10022015.pdf#page=29) and [Fast Read Quad IO (`0xEB`)](https://www.winbond.com/resource-files/w25q80dv%20dl_revh_10022015.pdf#page=31). But to make use of these instructions, the Flash needs to be put into Quad-SPI mode by setting Quad Enable (QE) bit in [Status Register 2](https://www.winbond.com/resource-files/w25q80dv%20dl_revh_10022015.pdf#page=15). And, the [Write Status Register (`0x01`)](https://www.winbond.com/resource-files/w25q80dv%20dl_revh_10022015.pdf#page=25) has to be used to change the value of a status register, along with [Write Enable (`0x06`)](https://www.winbond.com/resource-files/w25q80dv%20dl_revh_10022015.pdf#page=22) and [Write Disable (`0x04`)](https://www.winbond.com/resource-files/w25q80dv%20dl_revh_10022015.pdf#page=23) instructions.
+
+There are two registers on the &micro;C, [Status Register (`SR`)](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=602) and [Data Register (`DR0`)](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=605), that will aid in putting the Flash into Quad-SPI mode. Two bits of the Status Register, BUSY (0th-bit) and TFE (2nd-bit), indicate whether the SSI is busy and whether the data was transmitted or not. The Data register, in reality, writes or reads data, to or from, transmit or receive FIFOs of SSI, when the register is written to or read from. Consider the following piece of code that makes use of these two registers to put the Flash into Quad-SPI mode,
+```C
+#include <stdint.h>
+#include <stdbool.h>
+
+// Define necessary register addresses
+// XIP
+#define XIP_BASE                    (0x10000000)
+// SSI
+#define SSI_BASE                    (0x18000000)
+#define SSI_CTRLR0                  (*(volatile uint32_t *) (SSI_BASE + 0x000))
+#define SSI_SSIENR                  (*(volatile uint32_t *) (SSI_BASE + 0x008))
+#define SSI_BAUDR                   (*(volatile uint32_t *) (SSI_BASE + 0x014))
+#define SSI_SR                      (*(volatile uint32_t *) (SSI_BASE + 0x028))
+#define SSI_DR0                     (*(volatile uint32_t *) (SSI_BASE + 0x060))
+#define SSI_SPI_CTRLR0              (*(volatile uint32_t *) (SSI_BASE + 0x0f4))
+
+// A brief list of steps to take
+// 1. Setup IO_QSPI pins for XIP
+// 2. Setup SSI interface
+// 3. Enable XIP Cache
+
+// Boot stage 2 entry point
+__attribute__((section(".boot2"))) void bootStage2(void)
+{
+    // 1. Setup IO_QSPI pins for XIP (already done by bootrom)
+    //  - Bring IO_QSPI out of reset state
+    //  - Set SCLK and SS to OE
+    //  - Set all IO_QSPI GPIOs function to XIP
+
+    // 2. Setup SSI interface
+    //  - Read 2 byte status register
+    SSI_SSIENR = 0; // Disable SSI to configure it
+    SSI_BAUDR = 4; // Set clock divider to 4
+    SSI_CTRLR0 = (7 << 16); // Set 8 clocks per data frame
+    SSI_SSIENR = 1; // Enable SSI
+    SSI_DR0 = 0x05; // Read Status Register 1
+    SSI_DR0 = 0x35; // Read Status Register 2
+    while ((SSI_SR & (1 << 2)) && (~SSI_SR & 1)); // Wait while Transmit FIFO becomes empty and SSI is not busy
+    uint8_t stReg1 = SSI_DR0; // Copy Status Register 1 value
+    uint8_t stReg2 = SSI_DR0; // Copy Status Register 2 value
+    //  - If QE bit is not set, then set QE bit
+    if (!(stReg2 & 1 << 1))
+    {
+        SSI_DR0 = 0x06; // Execute Write Enable Instruction
+        SSI_DR0 = 0x01; // Execute Write Status Register Instruction
+        SSI_DR0 = stReg1; // Write Status Register 1 value
+        SSI_DR0 = stReg2 | 1 << 1; // Status Register 2 value
+        SSI_DR0 = 0x04; // Execute Write Disable Instruction
+    }
+```
+Note that Section 2 of the code above makes SSI to expect 8-bit data frame for now. After sending instructions for reading Status Registers 1 and 2 from Flash, the Status Register in &micro;C is used to make sure that the transaction was finished before reading the responses from Flash by accessing Data Register. Then the QE bit in Flash Status Register 2 is checked to determine whether it needs to be updated or not. To update it's value, first the Write Enable (`0x06`) instruction is transmitted followed by the Write Status Register (`0x01`) instruction, followed by the desired values of the two status registers and finally the Write Disable (`0x04`) instruction. Nice, the Flash is now in Quad-SPI mode.
+
+But wait, what is Quad-SPI mode? Let's first take a look at the real connection diagram between RP2040 and W25Q80DV Flash chip before answering this question.
+
+![img](../misc/figs/chap2/connectPicoFlash.svg)
+
+Note that instead of the standard four connections, `CSn`, `SCK`, `TX` and `RX`, between the &micro;C and the Flash, there are actually six connections. Furthermore, the data lines on the &micro;C side is now labelled as `SD0`, `SD1`, `SD2` and `SD3` instead of `TX` and `RX`. This defines the Quad-SPI mode, where the data is communicated over four data lines. When the Flash is put into Quad-SPI mode, the `RX`, `TX`, `WPn` and `HOLDn` pins are repurposed to work as `SD0`, `SD1`, `SD2` and `SD3`. Following diagram shows the Quad-SPI format message associated with Fast Read Quad Output (`0x6B`) instruction.
+
+![img](../misc/figs/chap2/flashReadQuadOut.svg)
+
+Let's do a quick comparison of speed between standard SPI and Quad-SPI reads.
+- Clock Cycles for Read Data (`0x03`) Instruction
+  - 8 Cycles for Instruction
+  - 24 Cycles for Address
+  - 32 Cycles for Data
+- Clock Cycles for Fast Read Quad Output (`0x6B`) Instruction
+  - 8 Cycles for Instruction
+  - 24 Cycles for Address
+  - 8 Cycles for I/O Change
+  - 8 Cycles for Data
+
+Thus, the Fast Read Quad Output (`0x6B`) Instruction requires only 48 clock cycles compared to 64 clock cycles in case of Read Data (`0x03`) Instruction making the former instruction 25% faster. The setup of SSI that achieves this is fairly similar to the one for Read Data (`0x03`) Instruction. Consider the code below,
+```C
+    //  - Configure SSI for Fast Read Quad Output Instruction (6Bh)
+    SSI_SSIENR = 0; // Disable SSI to configure it
+    SSI_CTRLR0 = (3 << 8) | (31 << 16) | (2 << 21); // Set SPI frame format to 0x2, EEPROM mode and 32 clocks per data frame
+    SSI_SPI_CTRLR0 = (6 << 2) | (2 << 8) | (0x6B << 24) | (8 << 11); // Set address length to 24-bits, instruction length to 8-bits, command to Read Data (6Bh) and set wait cycles to 8
+    SSI_SSIENR = 1; // Enable SSI
+```
+Note that compared to Read Data (`0x03`) Instruction, here the SSI is set to use Quad-SPI frame format, `XIP_CMD` is set to `0x6B` and 8 dummy clock cycles are added before data by changing `WAIT_CYCLES`. You can find the `bootStage2` code for Fast Read Quad Output (`0x6B`) Instruction in `bootStage2QuadOut.c`. Try to generate a `.uf2` file using this. You will not observe any visible difference in the blinking of LED. A more qualitative analysis of speed will be discussed in some other tutorial.
+
+### Full Speed Ahead
+Even though Fast Read Quad Output (`0x6B`) Instruction works, it is not the fastest. Fast Read Quad IO (`0xEB`) Instruction works in a slightly different way, and is significantly faster. First difference that makes this instruction faster is the ability to send the address in parallel over the four data lanes. However, the address now has to be appended with 8 Mode Bits. Thus, the 32 Bits (24 Bit address + 8 Mode Bits) can now be sent in only 8 clock cycles. This instruction also requires only 4 dummy cycles instead of 8. And, finally, if the instruction being used every time is the same, then the Mode bits can be set to `0xA0`, thus eliminating the need of sending the 8-bit instruction completely after the first message.
+> [!NOTE]
+> Surprisingly, this value of the Mode Bits `0xA0` and its effect is not discussed anywhere in [Flash's Datasheet](https://www.winbond.com/resource-files/w25q80dv%20dl_revh_10022015.pdf). Though, this instruction is used by Pico SDK's [second stage boot code](https://github.com/raspberrypi/pico-sdk/blob/master/src/rp2040/boot_stage2/boot2_w25q080.S).
+
+Following diagram shows the worst case data read process using this instruction.
+![img](../misc/figs/chap2/flashReadQuadIO.svg)
+
+Note that the number of clock cycles required for the worst case is 28, which is almost 71% faster than the standard SPI, and for the best case (where the instruction is not required) is 79% faster.
+
+> [!WARNING]
+> I have not been able to make the `bootStage2QuadIO.c` to work yet. The code presented in that file and in the upcoming paragraphs is my best attempt at getting the XIP to work with Fast Read Quad IO (`0xEB`) Instruction. If you are able to figure out the mistake in my code then please let me know by opening an Issue.
+
+To make use of this instruction, the Flash first has to be in the Quad-SPI mode, which is already discussed in the previous section. The next step is to setup SSI to perform one data read using Fast Read Quad IO (`0xEB`) Instruction. Consider the following piece of code that achieves this,
+```C
+    //  - Configure SSI for Fast Read Quad IO Instruction (EBh)
+    SSI_SSIENR = 0; // Disable SSI to configure it
+    SSI_CTRLR0 = (3 << 8) | (31 << 16) | (2 << 21); // Set SPI frame format to 0x2, EEPROM mode and 32 clocks per data frame
+    SSI_SPI_CTRLR0 = (8 << 2) | (2 << 8) | (4 << 11) | (0x1 << 0); // Set address length to 32-bits (Address + Mode), instruction length to 8-bits, set wait cycles to 4, and Command in standard SPI and address in format specified by FRF
+    SSI_SSIENR = 1; // Enable SSI
+```
+There are two differences here compare to Fast Read Quad Output (`0x6B`) Instruction case. The length of address is set to 32 Bits (24 Bits of Address + 8 Mode Bits) and SSI is set to send command in standard SPI mode and the address in Quad-SPI mode.
+
+Now a dummy data read can be carried out with Mode Bits set to `0xA0`. The address for this task doesn't matter since this is done to let the Flash know that the same instruction (`0xEB`) will be used from the next message unless specified otherwise. Consider the following lines of code that achieves this,
+```C
+    //  - Perform a dummy read with mode bits set to 0xa0 to avoid sending the instruction again
+    SSI_DR0 = 0xeb; // Send Fast Read Quad I/O Instruction
+    SSI_DR0 = 0xa0; // Send address (0x0) + mode (0xa0) = 0b00000000000000000000000010100000
+    while ((SSI_SR & (1 << 2)) && (~SSI_SR & 1)); // Wait while Transmit FIFO becomes empty and SSI is not busy
+```
+Note that this is achieved by writing the instruction and Addr + Mode to the Data Register (`DR0`) one after the other. An infinite `while` loop is used to make sure that the message gets transmitted before turning off SSI temporarily.
+
+The final step is to reconfigure SSI to send no instruction and append Mode Bits to the address from now on. Following lines of code performs this configuration,
+```C
+    //  - Configure SSI for sending the address and mode bits only
+    SSI_SSIENR = 0; // Disable SSI to configure it
+    // SSI_CTRLR0 = (3 << 8) | (31 << 16) | (2 << 21); // Set SPI frame format to 0x2, EEPROM mode and 32 clocks per data frame
+    SSI_SPI_CTRLR0 = (8 << 2) | (0 << 8) | (0xa0 << 24) | (4 << 11) | (0x2 << 0); // Set address length to 32-bits (Address + Mode), mode bits to append to address (0xa0), set wait cycles to 4, and Command (there is no command though) and address in format specified by FRF
+    SSI_SSIENR = 1; // Enable SSI
+```
+Note that here the instruction length is set to zero. And, `XIP_CMD` is set to Mode Bits `0xA0` instead of the instruction, contrary to was done for other instructions. From the [RP2040 Datasheet](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=606), you'd know that whether the value in `XIP_CMD` is used as a command or it is appended to the address depends on whether the instruction length is set to 8-bit or 0-bit respectively.
+
+Unfortunately, as described in the Warning above, this code doesn't work even though it is very close to the correct working code, at least that's what I feel. In any case, hopefully this section still gave you an idea about how fast XIP, SSI and Flash can work together.

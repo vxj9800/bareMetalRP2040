@@ -49,7 +49,6 @@ __attribute__((section(".boot2"))) void bootStage2(void)
         SSI_DR0 = stReg2 | 1 << 1; // Status Register 2 value
         SSI_DR0 = 0x04; // Execute Write Disable Instruction
     }
-
     //  - Configure SSI for Fast Read Quad Output Instruction (6Bh)
     SSI_SSIENR = 0; // Disable SSI to configure it
     SSI_CTRLR0 = (3 << 8) | (31 << 16) | (2 << 21); // Set SPI frame format to 0x2, EEPROM mode and 32 clocks per data frame

@@ -49,7 +49,6 @@ __attribute__((section(".boot2"))) void bootStage2(void)
         SSI_DR0 = stReg2 | 1 << 1; // Status Register 2 value
         SSI_DR0 = 0x04; // Execute Write Disable Instruction
     }
-
     //  - Configure SSI for Fast Read Quad IO Instruction (EBh)
     SSI_SSIENR = 0; // Disable SSI to configure it
     SSI_CTRLR0 = (3 << 8) | (31 << 16) | (2 << 21); // Set SPI frame format to 0x2, EEPROM mode and 32 clocks per data frame
@@ -60,7 +59,6 @@ __attribute__((section(".boot2"))) void bootStage2(void)
     SSI_DR0 = 0xeb; // Send Fast Read Quad I/O Instruction
     SSI_DR0 = 0xa0; // Send address (0x0) + mode (0xa0) = 0b00000000000000000000000010100000
     while ((SSI_SR & (1 << 2)) && (~SSI_SR & 1)); // Wait while Transmit FIFO becomes empty and SSI is not busy
-    // while ((SSI_SR & (1 << 2)) && (~SSI_SR & 1)); // Wait while Transmit FIFO becomes empty and SSI is not busy
     //  - Configure SSI for sending the address and mode bits only
     SSI_SSIENR = 0; // Disable SSI to configure it
     // SSI_CTRLR0 = (3 << 8) | (31 << 16) | (2 << 21); // Set SPI frame format to 0x2, EEPROM mode and 32 clocks per data frame
