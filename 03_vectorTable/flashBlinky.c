@@ -17,6 +17,6 @@ int main(void)
     while (true)
     {
         for (uint32_t i = 0; i < 100000; ++i); // Wait for some time
-        SIO_GPIO_OUT_XOR |= 1 << 25; // Flip output for GPIO 25
+        SIO_GPIO_OUT_XOR |= 1 << 25;  // Flip output for GPIO 25
     }
 }

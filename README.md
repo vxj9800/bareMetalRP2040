@@ -91,7 +91,7 @@ Unfortunately, RP2040 is an exception here. It doesn't follow this simplified pr
 1. **RP2040 Boot Up Process** - Discusses the two stage boot-up process of RP2040. Blinky code in first 256 bytes of flash, CRC32 calculation, linker script and Makefile.
 2. **Execute Code from Flash** - Discusses how SPI Flash and XIP peripheral works together. RP2040 is setup to execute code directly from Flash with Flash in standard SPI mode.
 3. **Boot Like Any Other Arm<sup>&copy;</sup> &micro;C** - A discussion of standard Arm<sup>&copy;</sup> boot-up process is provided and the Second Stage boot-loader prepared in previous section is made to behave in the same way. The idea of vector table and exception handling is introduced.
-4. **Placement of Data** (WIP) - Discussion about significance and placement of `.data`, `.bss` and `.rodata` sections is provided. Global, initialized, uninitialized and constant variables are now working.
+4. **Job of the `resetHandler`** (WIP) - Typical tasks performed of `resetHandler`, like clocks initialization, handling of `.data` and `.bss` section are discussed here.
 5. **Peripheral Library** (WIP) - Introduction to implementing macros, structures and functions for a peripheral using UART as an example.
 6. **Standard C Functionality** (WIP) - Add stub functions for `newlib` to make stack, heap and I/O work. This allows usage of `malloc`, `printf`, `strlen`, etc. possible.
 7. **Switch Gears into C++** (WIP) - Add any necessary changes to allow C++ code to execute properly.

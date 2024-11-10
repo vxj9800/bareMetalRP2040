@@ -82,40 +82,177 @@ Since Cortex-M0+ processors are designed to be energy-efficient, the ARMv6-M arc
 
 Finally it is time to start executing the code. Processor needs two pieces of information to do this, 1. Value of the **Stack Pointer** and 2. Pointer to **Reset Handler**. Regardless of the architecture version, the first entry in vector table is assumed to be the value of the Stack Pointer and the second entry is assumed to be the address of the Reset handler. The location of the vector table was already stored in `vectortable` variable at line 4. At line 16, the 4 Byte (32 bit) value of the **Stack Pointer** is copied from the first entry in the vector table and stored as the Main Stack Pointer since the access type at boot up is privileged. Also note the bit-wise `AND` operation being performed with this value. It makes sure that the Stack Pointer is 4 Byte aligned. At line 17, the value of the Process Stack Pointer is expected to be `UNKNOWN` since this should be set by the user code later on. At line 18, the value of second entry in the vector table (**Reset Handler**) is copied into a variable called `start`. And the processor performs a branch without link (copies value of `start` into **PC** register) to `start` at line 18. As discussed previously, **PC** contains the location of the next instruction that would execute. Now that the address of **Reset Handler** is copied into **PC**, the `reset` handler provided by the user will execute.
 
-Let's take a moment to ponder upon the ton of information just provided. This information dump also sets up a base for run-time execution topics like context switching, interrupts, power management, etc. So, it is very important that you spend some time understanding the terminology used here and reading up on the reference material provided.
+Let's take a moment to ponder upon the ton of information that was just provided. This information dump also sets up a base for the topics of run-time execution like context switching, interrupts, power management, etc. So, it is very important that you spend some time to understand the terminology used here and read up on the reference material provided.
 
 ### RP2040's Boot-up Process
-If you made an effort to find out the question posed in [`VTOR`](#vtor) section, then you already know what's coming. RP2040 also goes through the same boot up process discussed above. But, contrary to other &micro;C's case, where user provided vector table would exist at address `0x00000000`, RP2040 contains the hard coded `bootrom`. Thus, the vector table accessed as part of standard boot up process is provided by `bootrom` and processor starts executing `bootrom`'s `Reset_Handler`.
+If you made an effort to find out the question posed in [`VTOR`](#vtor) section, then you already know what's coming. RP2040 also goes through the same boot up process discussed above. But, contrary to other &micro;C's case, where user provided vector table would exist at address `0x00000000`, RP2040 contains the hard coded `bootrom`. Thus, the [vector table](https://github.com/raspberrypi/pico-bootrom-rp2040/blob/ef22cd8ede5bc007f81d7f2416b48db90f313434/bootrom/bootrom_rt0.S#L38) accessed as part of standard boot up process is present in `bootrom` and the processor starts executing [`bootrom`'s `Reset_Handler`](https://github.com/raspberrypi/pico-bootrom-rp2040/blob/ef22cd8ede5bc007f81d7f2416b48db90f313434/bootrom/bootrom_rt0.S#L225).
 
-As already discussed in previous tutorials, `bootrom` handles the switching between booting from Flash or booting into USB Storage mode. A Second Stage boot-loader was prepared in previous tutorials where the XIP was setup to allow the processor execute instructions directly from external Flash and the `main` function was called. Three steps need to be taken to make the Second Stage boot-loader behave exactly like a standard Arm<sup>&copy;</sup> &micro;C boot up process,
-1. Update the `VTOR` register to have address of the vector table provided by you
+As already discussed in previous tutorials, `bootrom` handles the switching between booting from Flash or booting into USB Storage mode. A Second Stage boot-loader was prepared in previous tutorials where the XIP was setup to allow the processor to execute instructions directly from external Flash and then the `main` function was called. 
+
+There are three steps that should be taken to make the Second Stage boot-loader behave exactly like a standard Arm<sup>&copy;</sup> &micro;C boot up process,
+1. Update the `VTOR` register to have address of the vector table provided by the user code
 2. Load the first entry of vector table into the Main Stack Pointer
 3. Load the second entry of vector table into the Program Counter (Perform a branch without link to `Reset_Handler`)
 
-Before implementing these steps to `bootStage2.c`, let's first create the vector table. Consider the code present in `vectorTable.c`. The important parts to note in there are following,
-- `extern void _sstack();` defines a function called `_sstack`. This will serve as an initial stack pointer. It is posed as a function because the rest of the vector table are all pointers to functions. This is just a hack to make the C/C++ compiler happy.
-- `void _reset()` is the `Reset_Handler`. For now, it just calls the `main` function and then goes into an infinite loop.
-- `void _defaultHandler()` is a function used in place of all the other exception handlers for now. The contents of tis function are same as the `main` function, except this one makes the LED blink 10 times faster.
-- `__attribute__((section(".vector"))) void (*const vector[])(void)` is the vector table containing the stack pointer as the first entry and the function pointers as the other entries. Following explains this declaration,
-  - Since exception handlers are not supposed to have any arguments and return values, both the arguments and return values are supposed to be `void`.
-  - Pointer to a function that takes no argument and returns nothing can be defined as `void (*funcName) (void)`.
-  - An array of such functions is defined as `void (*funcArrName[]) (void)`.
-  - The elements of this array are supposed to be read only. This is achieved by placing `const` keyword to the right of `*`, which yields `void (*const vector[])(void)`.
-  - Finally, `__attribute__((section(".vector")))` puts this array into a special section called `.vector`.
+Before implementing these steps to `bootStage2.c`, let's first create the vector table. Consider the following definition of the Interrupt Vector Table,
+```C
+#include <stdint.h>
+#include <stdbool.h>
 
-Now that the vector table is created, it needs to be placed at the correct location in the Flash (that's easy to do) and put the appropriate value of the stack pointer into it (that's a bit difficult). Consider the linker script provided in this folder. Following are the parts that were changed or added,
-- `STACK_SIZE = 0x20000;` defines a variable called `STACK_SIZE`. It is supposed to represent the size of the stack. RP2040 has 264 kBytes of RAM. The stack has to be smaller than or equal to that. Thus, the value of `STACK_SIZE` is set to 131072, which corresponds to 128 kBytes.
-- The `.text` section now contains any available `.vector` section at the top and then the `.text` sections from all the source code. This makes sure that the `.vector` is placed right after `.boot2` section, i.e. at `0x10000100`.
-- A new section called `.stack (NOLOAD)` is added to the list. The `NOLOAD` keyword tells the linker that the section has to be created but there is no content that needs to be loaded. Also, note that this section is placed in the `sram` as expected. The contents of this section are as follows,
-  - `_estack = .;` creates a variable `_estack` that contains the address till where the stack can grow. Here, this address is the start of the SRAM.
-  - `. = . + STACK_SIZE;` makes the linker skip address space by the size of the stack.
-  - `_sstack = .;` defines the starting address of the stack in SRAM. Note that this address would be higher than the `_estack`, because the stack grows downward in ARMv6-M architecture. Meaning that it starts with a higher address and the value of the stack pointer decreases as the stack grows.
+// Type of vector table entry
+typedef void (*vectFunc) (void);
 
-Now that the vector table is created and placed at the appropriate location in the binary, let's make sure that the Second Stage boot-loader behave exactly like a standard Arm<sup>&copy;</sup> &micro;C boot up process. Consider the `bootStage2.c` code. Following are the changes or additions compared to the previous version,
-- `#define M0PLUS_VTOR (*(uint32_t *) (M0PLUS_BASE + 0xed08))` defines the `VTOR` register of RP2040 that'll contain the address of the vector table.
-- `M0PLUS_VTOR = XIP_BASE + 0x100;` puts the value of the vector table (start of the Flash `0x10000000` + size of the Boot Stage 2 `0x100`) into the `VTOR` register.
-- `asm("msr msp, %0" :: "r"(*(uint32_t *)(M0PLUS_VTOR + 0x0)));` moves the first entry of the vector table (`*(uint32_t *)(M0PLUS_VTOR + 0x0))`) into a special purpose register `msp` (Main Stack Pointer).
-- `asm("bx %0" :: "r"(*(uint32_t *)(M0PLUS_VTOR + 0x4)));` makes the processor perform a branch without link to address (`*(uint32_t *)(M0PLUS_VTOR + 0x4))`), thus calling the `_reset` handler.
+// Declare the initial stack pointer, the value will be provided by the linker
+extern uint32_t _sstack;
+
+// Declare interrupt functions
+__attribute__((noreturn)) void defaultHandler();
+__attribute__((noreturn)) void resetHandler();
+
+// Vector table: 48 Exceptions = 16 Arm + 32 External
+const vectFunc vector[48] __attribute__((section(".vector"))) = 
+{
+    (vectFunc)(&_sstack),   // Stack pointer
+    resetHandler,           // Reset Handler
+    nmiHandler,             // NMI
+    hardFaultHandler,       // HardFault
+    0,                      // Reserved
+    0,                      // Reserved
+    ...
+}
+```
+All the entries in a vector table, except the initial stack pointer, is a pointer to a function with `void <functionName>(void)` signature. Thus, it makes sense to declare the vector table as an array of `vectFunc` type (`void (*vectFunc) (void)`) elements. The array defined in the code above has 48 entries, where the first 16 entries are for the exceptions supported by [ARMv6-M architecture](https://cdn.hackaday.io/files/1770827576276288/DDI0419E_armv6m_arm.pdf#page=191) and next 32 entries are external exceptions from different [peripherals](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=61). All the exceptions that are `Reserved` are assigned `0`. Also, note that the first entry of the vector table, `_sstack` (the initial stack pointer), is type casted to `vectFunc` type since the linker script will declare it as a 32-bit value. The `defaultHandler` function declared above acts as a default interrupt function for all exception. Most of the time, it is nothing but an infinite `while` loop, hence `__attribute__((noreturn))`. The definition of the `defaultHandler` used here is provided below.
+```C
+// Define necessary register addresses
+#define RESETS_RESET                                    *(volatile uint32_t *) (0x4000c000)
+#define IO_BANK0_GPIO25_CTRL                            *(volatile uint32_t *) (0x400140cc)
+#define SIO_GPIO_OE_SET                                 *(volatile uint32_t *) (0xd0000024)
+#define SIO_GPIO_OUT_XOR                                *(volatile uint32_t *) (0xd000001c)
+
+void defaultHandler()
+{
+    RESETS_RESET &= ~(1 << 5); // Bring IO_BANK0 out of reset state
+    IO_BANK0_GPIO25_CTRL = 5; // Set GPIO 25 function to SIO
+    SIO_GPIO_OE_SET |= 1 << 25; // Set output enable for GPIO 25 in SIO
+
+    while (true)
+    {
+        for (uint32_t i = 0; i < 10000; ++i); // Wait for some time
+        SIO_GPIO_OUT_XOR |= 1 << 25; // Flip output for GPIO 25
+    }
+}
+```
+Note that this is the same blinking LED code, but with a shorter wait time. Further more, all the other interrupt handlers defined in the vector table, except the `resetHandler`, is declared as `weak` and an alias to `defaultHandler` as shown below,
+```C
+void nmiHandler         () __attribute__((weak, alias("defaultHandler")));
+void hardFaultHandler   () __attribute__((weak, alias("defaultHandler")));
+void svCallHandler      () __attribute__((weak, alias("defaultHandler")));
+...
+```
+> [!NOTE]
+> A `weak` symbol denotes a specially annotated symbol during linking of object files. By default, without any annotation, a symbol in an object file is `strong`. During linking, a `strong` symbol can override a `weak` symbol of the same name.
+
+This is done so that the user can declare their own interrupt functions for each exception if they like. The `resetHandler` on the other hand is defined here because it has to perform a very specific set of tasks regardless of what user application might do in most cases. For now, the `resetHandler` directly calls the `main` function, as shown below,
+```C
+void resetHandler()
+{
+    main(); // Jump to main function
+    while(true); // Inf loop if we ever come back here
+}
+```
+Put the code discussed so far into a file named `start_rp2040.c`. Let's take a look at the Linker Script that would place the vector table at the correct location and define `_sstack` symbol,
+```
+ENTRY(bootStage2);
+
+MEMORY
+{
+    flash(rx) : ORIGIN = 0x10000000, LENGTH = 2048k
+    sram(rwx) : ORIGIN = 0x20000000, LENGTH = 256k
+}
+
+SECTIONS
+{
+    .boot2 :
+    {
+        _sboot2 = .;
+        *(.boot2*)
+        _eboot2 = .;
+        . = . + (252 - (_eboot2 - _sboot2));
+        *(.crc*)
+    } > flash
+    
+    .text :
+    {
+        *(.vector*)
+        *(.text*)
+    } > flash
+
+    .stack (NOLOAD) :
+    {
+        . = ORIGIN(sram) + LENGTH(sram);
+        _sstack = .;
+    } > sram
+
+}
+```
+Note that there are two differences compared to the linker script presented in the last tutorial. The `.text` section now contains the `.vector` section (containing the vector table) first before the `.text` sections from all the sources. A new section, `.stack`, is also added with attribute `(NOLOAD)` which allows the section to be processed normally, but will not actually be loaded into the `sram`. The location counter `.` is moved to the end of `sram` in this section and used to store the value of the location into `_sstack` symbol as the initial stack pointer. This is because the stack grows downward in ARMv6-M architecture. Meaning that it starts with a higher address and the value of the stack pointer decreases as the stack grows.
+
+Now that the vector table is created and placed at the appropriate location in the binary, let's make sure that the Second Stage boot-loader mimics the behavior of a standard Arm<sup>&copy;</sup> &micro;C boot up process. Take the `bootStage2.c` file from the last tutorial and make following changes to it,
+```C
+#include <stdint.h>
+#include <stdbool.h>
+
+// Define necessary register addresses
+// XIP
+#define XIP_BASE                    (0x10000000)
+// SSI
+#define SSI_BASE                    (0x18000000)
+#define SSI_CTRLR0                  (*(volatile uint32_t *) (SSI_BASE + 0x000))
+#define SSI_SSIENR                  (*(volatile uint32_t *) (SSI_BASE + 0x008))
+#define SSI_BAUDR                   (*(volatile uint32_t *) (SSI_BASE + 0x014))
+#define SSI_SPI_CTRLR0              (*(volatile uint32_t *) (SSI_BASE + 0x0f4))
+// M0PLUS
+#define M0PLUS_BASE                 (0xe0000000)
+#define M0PLUS_VTOR                 (*(volatile uint32_t *) (M0PLUS_BASE + 0xed08))
+
+// A brief list of steps to take
+// 1. Setup IO_QSPI pins for XIP
+// 2. Setup SSI interface
+// 3. Enable XIP Cache
+
+// Boot stage 2 entry point
+__attribute__((naked, noreturn, section(".boot2"))) void bootStage2(void)
+{
+    // 1. Setup IO_QSPI pins for XIP (already done by bootrom)
+    //  - Bring IO_QSPI out of reset state
+    //  - Set SCLK and SS to OE
+    //  - Set all IO_QSPI GPIOs function to XIP
+
+    // 2. Setup SSI interface
+    ...
+
+    ...
+    // 3. Enable XIP Cache
+    // It is enabled by default. Take a look at https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=128
+
+    // Mimic non-rp2040 Arm microcontroller behavior
+    // 1. Set correct VTOR value
+    M0PLUS_VTOR = XIP_BASE + 0x100; // Start of flash + boot stage 2 size
+
+    // 2. Load the stack pointer from the first entry in the vector table
+    asm("msr msp, %0" :: "r"(*(uint32_t *)(M0PLUS_VTOR + 0x0)));
+
+    // 3. Call the resetHandler using the second entry in the vector table
+    asm("bx %0" :: "r"(*(uint32_t *)(M0PLUS_VTOR + 0x4)));
+
+    // This area is unreachable
+    while(true);
+}
+```
+The changes here are relatively simple. As discussed earlier,
+1. The `M0PLUS_VTOR` register is updated to have address of the vector table. Since it is known by design of RP2040 that the first 256 Bytes are occupied by the `.boot2` code, the vector table will be placed at `0x10000100` (start of the Flash `0x10000000` + size of the Boot Stage 2 `0x100`).
+2. The first entry of vector table is loaded into the Main Stack Pointer `msp` using assembly instruction, `asm("msr msp, %0" :: "r"(*(uint32_t *)(M0PLUS_VTOR + 0x0)));`.
+3. The second entry of vector table is loaded into the Program Counter, a branch without link operation to `resetHandler` is performed by `asm("bx %0" :: "r"(*(uint32_t *)(M0PLUS_VTOR + 0x4)));`.
 
 Note that assembly code is used for the first time in the last two points above. Here it is necessary since C language doesn't contain any direct functions to access Arm<sup>&copy;</sup> special purpose registers. The use of assembly language will be extremely limited throughout other tutorials as well.
 
@@ -125,4 +262,4 @@ But wait, why do all of this if the achievement here is the same blinking LED as
 ```C
 *(uint32_t *) (0xf0000000) = 10;
 ```
-Note that this time the LED started blinking at a much faster pace (you'd see the faster blinking if you shake the &micro;C in front of you at a fast pace), meaning the the `_defaultHandler` is executing this time, even though it was never called explicitly. So, what happened? Well, the address (`0xf0000000`) being accessed in the line above is out of the valid address range that the processor can access. In such situations, the processor would generate a `HardFault` exception and call the associated handler by reading the vector table. Since `_defaultHandler` was used for almost all the exceptions, it was called. Such features are extremely powerful and allow management of high-priority tasks possible. This is the power that &micro;Cs have that &micro;Ps don't.
+Note that this time the LED started blinking at a much faster pace (you'd see the faster blinking if you shake the &micro;C in front of you at a fast pace), meaning the the `defaultHandler` is executing this time, even though it was never called explicitly. So, what happened? Well, the address (`0xf0000000`) being accessed in the line above is out of the valid address range that the processor can access. In such situations, the processor would generate a `HardFault` exception and call the associated handler by reading the vector table. Since `defaultHandler` was aliased for almost all the exceptions, it was called. It was also mentioned that the `resetHandler` has to perform a very specific set of tasks, however the `resetHandler` defined in the previous section just called the `main` function and nothing else. This is discussed in the great amount of detail in the next tutorial. This is it for now. Bye bye!!!

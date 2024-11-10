@@ -1,7 +1,5 @@
 ENTRY(bootStage2);
 
-STACK_SIZE = 0x20000; /* Define Stack Size */
-
 MEMORY
 {
     flash(rx) : ORIGIN = 0x10000000, LENGTH = 2048k
@@ -27,8 +25,7 @@ SECTIONS
 
     .stack (NOLOAD) :
     {
-        _estack = .;
-        . = . + STACK_SIZE;
+        . = ORIGIN(sram) + LENGTH(sram);
         _sstack = .;
     } > sram
 }

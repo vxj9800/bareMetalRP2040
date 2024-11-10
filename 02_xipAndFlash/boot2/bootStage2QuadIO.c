@@ -65,6 +65,7 @@ __attribute__((section(".boot2"))) void bootStage2(void)
     // 3. Enable XIP Cache
     // It is enabled by default. Take a look at https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=128
 
+    // Jump to main function
     void (*main)(void) = (void (*)())0x10000101; // Note 0x10000100 + 0x1 (this forces the instructions to be interpreted as thumb)
     main();
 

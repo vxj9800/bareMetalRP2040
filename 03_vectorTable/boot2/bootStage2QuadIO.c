@@ -68,7 +68,7 @@ __attribute__((section(".boot2"))) void bootStage2(void)
     // 3. Enable XIP Cache
     // It is enabled by default. Take a look at https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=128
 
-    // Mimic non-rp2040 arm microcontroller behavior
+    // Mimic non-rp2040 Arm microcontroller behavior
     // 1. Set correct VTOR value
     M0PLUS_VTOR = XIP_BASE + 0x100; // Start of flash + boot stage 2 size
 
