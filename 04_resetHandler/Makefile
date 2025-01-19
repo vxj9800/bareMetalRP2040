@@ -23,8 +23,8 @@ GPP = $(TOOLCHAIN)g++
 LNK = $(TOOLCHAIN)ld
 DMP = $(TOOLCHAIN)objdump
 CPY = $(TOOLCHAIN)objcopy
-GCCFLAGS ?= -mcpu=cortex-m0plus -O3
-LNKFLAGS ?= -T $(LNKSCRIPT) -nostdlib -O3 -fno-builtin
+GCCFLAGS ?= -mcpu=cortex-m0plus -O3 --specs=nano.specs
+LNKFLAGS ?= -T $(LNKSCRIPT) -O3 --specs=nosys.specs
 
 # Utilities path
 UTILS = ../utils
@@ -36,7 +36,7 @@ makeDir:
 
 # Compile bootStage2 with linking
 $(BUILDBOOT2DIR)/$(BOOT2).elf: $(BOOT2DIR)/$(BOOT2).c
-	$(GCC) $(BOOT2DIR)/$(BOOT2).c $(GCCFLAGS) $(LNKFLAGS) -o $@
+	$(GCC) $(BOOT2DIR)/$(BOOT2).c $(GCCFLAGS) $(LNKFLAGS) -nostdlib -o $@
 	$(DMP) -hSD $(BUILDBOOT2DIR)/$(BOOT2).elf > $(BUILDBOOT2DIR)/$(BOOT2).objdump
 
 # Compute CRC32 value and generate a c code for it

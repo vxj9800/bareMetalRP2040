@@ -5,7 +5,10 @@
 typedef void (*vectFunc) (void);
 
 // Declare the initial stack pointer, the value will be provided by the linker
-extern uint32_t _sstack, _sdata, _edata, _sdataf;
+extern uint32_t __stack, _sdata, _edata, _sdataf;
+
+// Declare _start function from libgloss
+extern void _start(void);
 
 // Declare interrupt functions defined in this file
 __attribute__((noreturn)) void defaultHandler();
@@ -58,7 +61,7 @@ extern int main(void);
 // Vector table: 48 Exceptions = 16 Arm + 32 External
 const vectFunc vector[48] __attribute__((section(".vector"))) = 
 {
-    (vectFunc)(&_sstack),   // Stack pointer
+    (vectFunc)(&__stack),   // Stack pointer
     resetHandler,           // Reset Handler
     nmiHandler,             // NMI
     hardFaultHandler,       // HardFault
@@ -118,7 +121,7 @@ void resetHandler()
     // Initialize the system
     SystemInit();
 
-    main(); // Jump to main function
+    _start(); // Call C Runtime Startup, it will jump to main function
     while(true); // Inf loop if we ever come back here
 }
 

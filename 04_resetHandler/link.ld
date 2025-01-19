@@ -28,14 +28,23 @@ SECTIONS
         *(.data*)
     } > sram AT > flash     /* "> sram" is the VMA, "> flash" is the LMA */
 
+    .bss (NOLOAD) :
+    {
+        *(.bss*)
+    } > sram
+
     .stack (NOLOAD) :
     {
         . = ORIGIN(sram) + LENGTH(sram);
-        _sstack = .;
+        __stack = .;
     } > sram
 
     /* Get LMA and VMA for .data section */
     _sdata = ADDR(.data);               /* Get starting LMA */
     _edata = _sdata + SIZEOF(.data);    /* Get ending LMA */
     _sdataf = LOADADDR(.data);          /* Get starting VMA */
+
+    /* Get start and end of .bss section */
+    __bss_start__ = ADDR(.bss);                 /* Get starting LMA */
+    __bss_end__ = __bss_start__ + SIZEOF(.bss);       /* Get ending LMA */
 }

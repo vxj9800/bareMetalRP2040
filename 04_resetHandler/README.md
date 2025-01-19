@@ -1,7 +1,7 @@
 ## 4. Job of the `resetHandler`
 It was mentioned in the last tutorial that the `resetHandler` has to perform certain tasks before the `main` function is called. The tasks that a `resetHandler` typically performs are as follows,
-1. Copy the initialized global variables, `.data` section, into the `sram`.
-2. Zero out the uninitialized variables, `.bss` section, in the `sram`.
+1. Copy the initialized static and/or global variables, `.data` section, into the SRAM.
+2. Zero out the uninitialized static and/or global variables, `.bss` section, in the SRAM.
 3. Setup all the clocks and PLLs.
 4. Call C/C++ runtime startup code.
 5. Jump to `main`
@@ -267,8 +267,8 @@ int main(void)
 ```
 This concludes majority of the basics related to clocks and timing on a &micro;C. You can make a similar change to `defaultHandler` function. Now that the system is capable of running at your choice of frequency, let's tackle another task that `resetHandler` is supposed to perform.
 
-### Copy the initialized global variables
-Another task of `resetHandler` is to copy the `.data` section into the `sram`. As discussed in tutorial 1, `.data` section contains the values of the initialized global variables. Let's make the following changes to `flashBlinky.c`.
+### Copy the Initialized static and/or global variables
+Another task of `resetHandler` is to copy the `.data` section into the SRAM. As discussed in tutorial 1, `.data` section contains the values of the initialized static and/or global variables (called initialized variables in the rest of this section). Let's make the following changes to `flashBlinky.c`.
 ```C
 ...
 extern void usSleep(uint64_t us);
@@ -295,31 +295,31 @@ Note that the changed `main` function above is supposed to blink the LED 10 time
 - LED stays off at all times.
 
 > [!NOTE]
-> In reality, the first outcome listed above is expected, and you'd see it if optimization is disabled. However, with `-O3` applied, a detailed debugging session suggests that some kind of core register data corruption takes place that produces the other outcomes. If the code is stepped through at the assembly level then again everything works fine. All in all, the code currently is faulty anyway, so there is not much worth in investigating these outcomes further.
+> In reality, the first outcome listed above is expected, and you'd see it if optimization is disabled. However, with `-O3` applied, a detailed debugging session suggests that some kind of core register data corruption takes place causing the other outcomes. If the code is stepped through at the assembly level then again everything works fine. All in all, the code currently is faulty anyway, so there is not much worth in investigating these outcomes further.
 
-This issue is caused by the fact that the global variable `blinkCnt` is currently located in the Flash (look at the Object Dump) and XIP ignores all the write commands that it receives. Thus, `blinkCnt` is never actually decremented in `while (--blinkCnt)` and so the `while` loop never breaks.
+This issue is caused by the fact that the initialized global variable, `blinkCnt`, is currently located in the FLASH (look at the Object Dump) and XIP ignores all the write commands that it receives. Thus, `blinkCnt` is never actually decremented in `while (--blinkCnt)` and so the `while` loop never breaks.
 
 > [!NOTE]  
-> If you have been paying attention so far, you might be wondering how come no linker error is being generated for the global variable being used. For those of you not following this discussion, the global variables should end up in `.data` or `.bss` section. However, none of those sections are included in the linker script at the moment. So, technically, the global variable shouldn't exist in the final binary. Surprisingly, the linker works in a bit counterintuitive way in this case. Even though a section is not defined in the linker script, the linker tries to keep all the sections in the final binary unless the sections are explicitly placed in a special section called `/DISCARD/`. Thus, the global variable `blinkCnt` is actually present in the final binary, search for `blinkCnt` in the `.objdump` file.
+> If you have been paying attention so far, you might be wondering how come no linker error is being generated for the global variable being used. For those of you not following this discussion, the global or static variables should end up in `.data` or `.bss` section. However, none of those sections are included in the linker script at the moment. So, technically, the global variable shouldn't exist in the final binary. Surprisingly, the linker works in a bit counterintuitively in this case. Even though a section is not defined in the linker script, the linker tries to keep all the sections in the final binary unless the sections are explicitly placed in a special section called `/DISCARD/`. Thus, the initialized global variable `blinkCnt` is actually present in the final binary, search for `blinkCnt` in the `.objdump` file.
 
-Performing write operations to a specific address of a Flash memory is generally not permitted when it is in operation. SPI NOR Flash memories work at page and sector sizes. A sector is defined as the smallest erasable block size. Sectors can be subdivided into pages and the data can be written in page-size chunks. This is why all the write requests sent out by the processor are ignored by XIP.
+Performing write operations to a specific address of a FLASH memory is generally not permitted during normal operation. SPI NOR FLASH memories work at page and sector sizes. A sector is defined as the smallest erasable block size. Sectors can be subdivided into pages and the data can be written in page-size chunks. This is why all the write requests sent out by the processor are ignored by XIP.
 
-This issue can be solved by moving all the global variables to the RAM and somehow making the code to have final RAM address (where the variables live during run-time) instead of the Flash address (where the variables are stored). You must be paying attention if you started thinking about VMA (virtual memory address) and LMA (load memory address).
+This issue can be solved by moving all the initialized variables to the SRAM and somehow making the code to have final SRAM address (where the variables live during run-time) instead of the FLASH address (where the variables are stored). You must be paying attention if you started thinking about VMA (virtual memory address) and LMA (load memory address).
 
-To do this, you'll have to know where in the FLASH memory the global variables reside and where in the RAM they should be moved to. Then, in the `resetHandler`, the initialized global variable values can be moved to the RAM.
+To do this, you'll have to know where in the FLASH memory the `.data` section resides and where in the SRAM it should be moved to. Then, `resetHandler` can do the job of moving values from the FLASH to the SRAM.
 
-The location in the flash can be produced from the linker script, similar to what was done for the initial stack pointer (`_sstack`) in the previous tutorial. However, where the global variables go in the RAM is really your choice. One common RAM space allocation arrangement is shown below,
-- Top of RAM
+Location of the `.data` section in the FLASH can be produced from the linker script, similar to what was done for the initial stack pointer (`_sstack`) in the previous tutorial. However, where the `.data` section should go in the SRAM is really your choice. One common SRAM space allocation arrangement is shown below,
+- Top of SRAM
 - Initial Stack Pointer
 - Empty space available for both stack and heap
 - ...
 - Empty space available for both stack and heap
 - Initial Heap Pointer
-- Uninitialized (Initialized to 0) Global Variables
-- Initialized Global Variables
-- Bottom of RAM
+- Uninitialized (Initialized to 0) Variables
+- Initialized Variables
+- Bottom of SRAM
 
-Let's stick to this arrangement and try to deal with the placement of initialized global variables in the RAM. Consider the following changes made to the linker script.
+Let's stick to this arrangement and try to deal with the placement of initialized variables in the SRAM. Consider the following changes made to the linker script.
 ```ld
 ...
     
@@ -367,11 +367,262 @@ void resetHandler()
 }
 ...
 ```
-The `for` loop added above copies initial values of the global variables in RAM. However, if you compile the code now, you'd get the following error,
+The `for` loop added above copies values of the initialized variables in SRAM. However, if you compile the code now, you'd get the following error,
 ```
 /usr/lib/gcc/arm-none-eabi/10.3.1/../../../arm-none-eabi/bin/ld: /tmp/ccHF0SOM.o: in function `resetHandler':
 startup_rp2040.c:(.text+0x16): undefined reference to `memcpy'
 collect2: error: ld returned 1 exit status
 make: *** [Makefile:50: build/flashBlinky.elf] Error 1
 ```
-This is because you might be compiling the code with `-O3`, in which case the compiler notices that the `for` loop is nothing but a memory copy option, and it should be optimized with the help of `memcpy` function. But, one of the linker flags added to the `Makefile` is `-nostdlib`, which means that `memcpy` is not defined anywhere. You can add `-fno-builtin` linker flag, which tells the compiler to not use the commonly available built-in functions, take a look at [Options Controlling C Dialect](https://gcc.gnu.org/onlinedocs/gcc/C-Dialect-Options.html) for further clarification. Now, you should be able to compile the executable, run it on the &micro;C and observe the LED blinking for 10 times only.
+This is because you might be compiling the code with `-O3`, in which case the compiler notices that the `for` loop is nothing but a memory copy operation, and it should be optimized with the help of `memcpy` function. But, one of the linker flags added to the `Makefile` is `-nostdlib`, which means that `memcpy` is not defined anywhere. You can add `-fno-builtin` linker flag, which tells the compiler to not use the commonly available built-in functions, take a look at [Options Controlling C Dialect](https://gcc.gnu.org/onlinedocs/gcc/C-Dialect-Options.html) for further clarification. Now, you should be able to compile the executable, run it on the &micro;C and observe the LED blinking for 10 times only.
+
+### Copy the Uninitialized static and/or global variables
+Similar to the `.data` section, `resetHandler` also manages the `.bss` section at the boot. Compiler puts the uninitialized static and/or global variables (called uninitialized variables in the rest of this section) into this section. If these variables are not managed properly then you may see unexpected behavior. Consider following changes to the `main` function where the `blinkCnt` is now expected to be zero when the code starts running,
+```c++
+...
+
+// Global variable counting how many times LED switched state
+uint8_t blinkCnt;
+
+// Main entry point
+int main(void)
+{
+    ...
+    SIO_GPIO_OE_SET |= 1 << 25; // Set output enable for GPIO 25 in SIO
+
+    while (++blinkCnt < 21)
+    {
+        usSleep(500000); // Wait for 0.5sec
+        SIO_GPIO_OUT_XOR |= 1 << 25;  // Flip output for GPIO 25
+    }
+}
+```
+Once again, this code should blink the LED 10 times. Also, there is no linker error because linker knows that the `.bss` section should always go to SRAM and so it does that (take a look at the object-dump). However, if you execute this code on the &micro;C then you may see the LED not blink even once. This is because the SRAM generally contains random values at power-up. Thus, there is a high chance that the value of `blinkCnt` at the start is already larger than zero.
+
+Since the uninitialized variables are expected to be initialized to zero, they are not required to be stored in the FLASH. The only information needed here is the total size of these variables so that enough space can be reserved in the SRAM and can be set to zero. The process to achieve this is very similar to what was done for the `.data` section. Let's start with figuring out the total size of the uninitialized variables with the help of the linker script,
+```ld
+...
+
+    .data :
+    {
+        *(.data*)
+    } > sram AT > flash     /* "> sram" is the VMA, "> flash" is the LMA */
+
+    .bss (NOLOAD) :
+    {
+        *(.bss*)
+    } > sram
+
+    .stack (NOLOAD) :
+    {
+        . = ORIGIN(sram) + LENGTH(sram);
+        _sstack = .;
+    } > sram
+
+...
+
+    _sdataf = LOADADDR(.data);          /* Get starting VMA */
+
+    /* Get start and end of .bss section */
+    _sbss = ADDR(.bss);                 /* Get starting LMA */
+    _ebss = _sbss + SIZEOF(.bss);       /* Get ending LMA */
+```
+Note that the `.bss` sections is added here with `(NOLOAD)` attribute, which means that the addresses for these variables are created, but the values of these variables is not loaded. The linker script also defines two symbols namely `_sbss` and `_ebss` which will help initialize the necessary SRAM area to zero. Also note that the `.bss` section is loaded after the `.data` section. This doesn't have to be the case, but it is common to have this arrangement. Now that the location of the `.bss` section in SRAM is known, it can be initialized to zero in the `resetHandler` as shown below.
+```c++
+...
+// Declare the initial stack pointer, the value will be provided by the linker
+extern uint32_t _sstack, _sdata, _edata, _sdataf, _sbss, _ebss;
+...
+void resetHandler()
+{
+    // Copy .data section from FLASH to SRAM
+    uint32_t *initValsPtr = &_sdataf;
+    for (uint32_t *dataPtr = &_sdata; dataPtr < &_edata; ++dataPtr)
+        *dataPtr = *initValsPtr++;
+
+    // Initialize .bss section to zero
+    for (uint32_t *bssPtr = &_sbss; bssPtr < &_ebss; ++bssPtr)
+        *bssPtr = 0;
+    
+    // Initialize the system
+    SystemInit();
+
+    main(); // Jump to main function
+    while(true); // Inf loop if we ever come back here
+}
+...
+```
+The second `for` loop added in `resetHandler` is very similar to the one for `.data` section. The only difference is that instead of the values being copied from FLASH to SRAM, they are set to zero. Now, you should be able to compile the executable, run it on the &micro;C and observe the LED blinking for 10 times.
+
+### Call C/C++ Runtime Startup Code
+Recall that the `-nostdlib` flag is being used in the `Makefile` since the first tutorial. This was done because many functions that are part of C Standard Library (`libc`) rely on system calls (functions provided by the operating system), which are not available here. As a result, `-fno-builtin` linker flag was also added during the discussion of [`.data` section](#copy-the-initialized-static-andor-global-variables) to force the linker to not use the in-built version of `memcpy`, which is generally provided by `libc`.
+
+To the contrary of what was done, one would expect to use all the functionalities provided by the C programming language to make their life easier. So, let's go ahead and remove these linker flags from the `Makefile`. If you try to compile the code now, you'd see the following errors show up,
+```
+mkdir -p build/boot2
+arm-none-eabi-gcc boot2/bootStage2QuadOut.c -mcpu=cortex-m0plus -O3 -T link.ld -O3 -o build/boot2/bootStage2QuadOut.elf
+/usr/lib/gcc/arm-none-eabi/10.3.1/../../../arm-none-eabi/bin/ld: /usr/lib/gcc/arm-none-eabi/10.3.1/../../../arm-none-eabi/lib/thumb/v6-m/nofp/crt0.o: in function `_mainCRTStartup':
+/build/newlib-pB30de/newlib-3.3.0/build/arm-none-eabi/thumb/v6-m/nofp/libgloss/arm/semihv2m/../../../../../../../../libgloss/arm/crt0.S:545: undefined reference to `main'
+/usr/lib/gcc/arm-none-eabi/10.3.1/../../../arm-none-eabi/bin/ld: /build/newlib-pB30de/newlib-3.3.0/build/arm-none-eabi/thumb/v6-m/nofp/libgloss/arm/semihv2m/../../../../../../../../libgloss/arm/crt0.S:547: undefined reference to `__bss_start__'
+/usr/lib/gcc/arm-none-eabi/10.3.1/../../../arm-none-eabi/bin/ld: /build/newlib-pB30de/newlib-3.3.0/build/arm-none-eabi/thumb/v6-m/nofp/libgloss/arm/semihv2m/../../../../../../../../libgloss/arm/crt0.S:547: undefined reference to `__bss_end__'
+/usr/lib/gcc/arm-none-eabi/10.3.1/../../../arm-none-eabi/bin/ld: /usr/lib/gcc/arm-none-eabi/10.3.1/../../../arm-none-eabi/lib/thumb/v6-m/nofp/libc.a(lib_a-exit.o): in function `exit':
+/build/newlib-pB30de/newlib-3.3.0/build/arm-none-eabi/thumb/v6-m/nofp/newlib/libc/stdlib/../../../../../../../../newlib/libc/stdlib/exit.c:64: undefined reference to `_exit'
+collect2: error: ld returned 1 exit status
+make: *** [Makefile:39: build/boot2/bootStage2QuadOut.elf] Error 1
+```
+The first issue here is that these warnings show up during compilation of `bootStage2QuadOut.c`. Remember that `bootStage2QuadOut.c` is compiled in the first pass so that its CRC32 value can be calculated. Moreover, `bootStage2QuadOut.c` doesn't use any functions from `libc`, so it can be compiled without it. To do this, add the `-nostdlib` flag just for `bootStage2QuadOut.c` as shown below,
+```make
+...
+# Compile bootStage2 with linking
+$(BUILDBOOT2DIR)/$(BOOT2).elf: $(BOOT2DIR)/$(BOOT2).c
+	$(GCC) $(BOOT2DIR)/$(BOOT2).c $(GCCFLAGS) $(LNKFLAGS) -nostdlib -o $@
+	$(DMP) -hSD $(BUILDBOOT2DIR)/$(BOOT2).elf > $(BUILDBOOT2DIR)/$(BOOT2).objdump
+...
+```
+Trying to compile again generates the following output,
+```
+mkdir -p build/boot2
+arm-none-eabi-gcc boot2/bootStage2QuadOut.c -mcpu=cortex-m0plus -O3 -T link.ld -O3 -nostdlib -o build/boot2/bootStage2QuadOut.elf
+arm-none-eabi-objdump -hSD build/boot2/bootStage2QuadOut.elf > build/boot2/bootStage2QuadOut.objdump
+arm-none-eabi-objcopy -O binary build/boot2/bootStage2QuadOut.elf build/boot2/bootStage2QuadOut.bin
+g++ -I ../utils boot2/compCrc32.cpp -o build/boot2/compCrc32.out
+./build/boot2/compCrc32.out build/boot2/bootStage2QuadOut.bin
+arm-none-eabi-gcc *.c boot2/bootStage2QuadOut.c build/boot2/crc.c -mcpu=cortex-m0plus -O3 -T link.ld -O3 -o build/flashBlinky.elf
+/usr/lib/gcc/arm-none-eabi/10.3.1/../../../arm-none-eabi/bin/ld: /usr/lib/gcc/arm-none-eabi/10.3.1/../../../arm-none-eabi/lib/thumb/v6-m/nofp/crt0.o: in function `_mainCRTStartup':
+/build/newlib-pB30de/newlib-3.3.0/build/arm-none-eabi/thumb/v6-m/nofp/libgloss/arm/semihv2m/../../../../../../../../libgloss/arm/crt0.S:547: undefined reference to `__bss_start__'
+/usr/lib/gcc/arm-none-eabi/10.3.1/../../../arm-none-eabi/bin/ld: /build/newlib-pB30de/newlib-3.3.0/build/arm-none-eabi/thumb/v6-m/nofp/libgloss/arm/semihv2m/../../../../../../../../libgloss/arm/crt0.S:547: undefined reference to `__bss_end__'
+/usr/lib/gcc/arm-none-eabi/10.3.1/../../../arm-none-eabi/bin/ld: /usr/lib/gcc/arm-none-eabi/10.3.1/../../../arm-none-eabi/lib/thumb/v6-m/nofp/libc.a(lib_a-exit.o): in function `exit':
+/build/newlib-pB30de/newlib-3.3.0/build/arm-none-eabi/thumb/v6-m/nofp/newlib/libc/stdlib/../../../../../../../../newlib/libc/stdlib/exit.c:64: undefined reference to `_exit'
+collect2: error: ld returned 1 exit status
+make: *** [Makefile:50: build/flashBlinky.elf] Error 1
+```
+You can see that `bootStage2QuadOut.c` compiles fine now and all the errors are generated when the full executable is compiled. Let's try to understand these errors by first understanding how `libc` actually works.
+
+A great amount of functionalities like string handling, Standard IO, file handling, etc. is generally provided by the C Standard library. However, these functionalities come at the cost of very large codebase. Thus, for a &micro;C with limited resources available, it is never advisable to include the commonly used `libc` which is [`glibc` developed by GNU](https://www.gnu.org/software/libc/). There exists multiple C Standard Library implementations that are tuned for various hardware. A common one used with &micro;Cs is called [Newlib](https://www.sourceware.org/newlib/), which is being maintained by RedHat. Note the keywords `newlib` and `libgloss` in the errors shown above, meaning that `newlib` is already being used. Since the compiler used here is for Arm<sup>&copy;</sup> and the target architecture is specified, compiler chooses to use `newlib` by default.
+
+Any `libc` has to perform some initialization before the main application code, `main` function, is called. However, since `newlib` is meant to work with embedded/bare-metal hardware that may not have an operating system, the library also needs to handle platform specific activities as well. This is where `libgloss` comes into picture. It provides stubs or minimal implementations of the service calls that an operating system would normally provide. It also performs a preliminary initialization of the C Standard library. These functions include, but not limited to,
+- Initialize `.bss` section
+- Calling object constructors at startup
+- Setting up stack and heap
+- Calling object destructors at exit
+- Calling `main` function
+
+Since the code developed so far is bare-metal, the compiler needs to be told somehow that there is no operating system available. This way, it will replace the `_exit()` function call, for which an error is visible above, with a minimal implementation available in `libgloss`. This information can be conveyed to the compiler through spec files. To be more precise, a spec file controls the behavior of all the programs that `gcc` calls. GNU already provides some common spec files which can be listed by executing `ls /usr/lib/arm-none-eabi/lib/*.specs` in the terminal,
+```tty
+/usr/lib/arm-none-eabi/lib/aprofile-validation-v2m.specs  /usr/lib/arm-none-eabi/lib/linux.specs       /usr/lib/arm-none-eabi/lib/rdimon.specs
+/usr/lib/arm-none-eabi/lib/aprofile-validation.specs      /usr/lib/arm-none-eabi/lib/nano.specs        /usr/lib/arm-none-eabi/lib/rdpmon.specs
+/usr/lib/arm-none-eabi/lib/aprofile-ve-v2m.specs          /usr/lib/arm-none-eabi/lib/nosys.specs       /usr/lib/arm-none-eabi/lib/redboot.specs
+/usr/lib/arm-none-eabi/lib/aprofile-ve.specs              /usr/lib/arm-none-eabi/lib/pid.specs
+/usr/lib/arm-none-eabi/lib/iq80310.specs                  /usr/lib/arm-none-eabi/lib/rdimon-v2m.specs
+```
+
+Two useful spec files here are,
+- `nano.specs`: For using even smaller version of the C Standard Library.
+- `nosys.specs`: For compiling the code to work on a bare-metal target, no operating system.
+Let's add these specs to the `Makefile` as shown below,
+```make
+...
+
+CPY = $(TOOLCHAIN)objcopy
+GCCFLAGS ?= -mcpu=cortex-m0plus -O3 --specs=nano.specs
+LNKFLAGS ?= -T $(LNKSCRIPT) -O3 --specs=nosys.specs
+
+# Utilities path
+UTILS = ./
+
+...
+```
+Trying to compile again produces the following output,
+```
+mkdir -p build/boot2
+arm-none-eabi-gcc boot2/bootStage2QuadOut.c -mcpu=cortex-m0plus -O3 --specs=nano.specs -T link.ld -O3 --specs=nosys.specs -nostdlib -o build/boot2/bootStage2QuadOut.elf
+arm-none-eabi-objdump -hSD build/boot2/bootStage2QuadOut.elf > build/boot2/bootStage2QuadOut.objdump
+arm-none-eabi-objcopy -O binary build/boot2/bootStage2QuadOut.elf build/boot2/bootStage2QuadOut.bin
+g++ -I ../utils boot2/compCrc32.cpp -o build/boot2/compCrc32.out
+./build/boot2/compCrc32.out build/boot2/bootStage2QuadOut.bin
+arm-none-eabi-gcc *.c boot2/bootStage2QuadOut.c build/boot2/crc.c -mcpu=cortex-m0plus -O3 --specs=nano.specs -T link.ld -O3 --specs=nosys.specs -o build/flashBlinky.elf
+/usr/lib/gcc/arm-none-eabi/10.3.1/../../../arm-none-eabi/bin/ld: /usr/lib/gcc/arm-none-eabi/10.3.1/../../../arm-none-eabi/lib/thumb/v6-m/nofp/crt0.o: in function `_mainCRTStartup':
+/build/newlib-pB30de/newlib-3.3.0/build/arm-none-eabi/thumb/v6-m/nofp/libgloss/arm/semihv2m/../../../../../../../../libgloss/arm/crt0.S:547: undefined reference to `__bss_start__'
+/usr/lib/gcc/arm-none-eabi/10.3.1/../../../arm-none-eabi/bin/ld: /build/newlib-pB30de/newlib-3.3.0/build/arm-none-eabi/thumb/v6-m/nofp/libgloss/arm/semihv2m/../../../../../../../../libgloss/arm/crt0.S:547: undefined reference to `__bss_end__'
+collect2: error: ld returned 1 exit status
+make: *** [Makefile:50: build/flashBlinky.elf] Error 1
+```
+Note that the error for `_exit` function not being available is resolved now. The other errors correspond to the missing symbols that are required by `libgloss` to perform initialization. You might have noticed `__bss_start__` and `__bss_end__` in the error descriptions, and yes, you are correct, these are just different names than what were used in this tutorial, `_sbss` and `_ebss`. These are needed by `libgloss` because one of the tasks it performs is to initialize the `.bss` section. To resolve this issue, the `_sbss` and `_ebss` can be renamed appropriately as shown below,
+```ld
+...
+
+    _sdataf = LOADADDR(.data);          /* Get starting VMA */
+
+    /* Get start and end of .bss section */
+    __bss_start__ = ADDR(.bss);                 /* Get starting LMA */
+    __bss_end__ = __bss_start__ + SIZEOF(.bss);       /* Get ending LMA */
+}
+```
+Necessary changes in `startup_rp2040.c` are also required,
+```c++
+...
+
+// Type of vector table entry
+typedef void (*vectFunc) (void);
+
+// Declare the initial stack pointer, the value will be provided by the linker
+extern uint32_t _sstack, _sdata, _edata, _sdataf;
+
+// Declare interrupt functions defined in this file
+__attribute__((noreturn)) void defaultHandler();
+
+...
+
+void resetHandler()
+{
+    // Copy .data section from FLASH to SRAM
+    uint32_t *initValsPtr = &_sdataf;
+    for (uint32_t *dataPtr = &_sdata; dataPtr < &_edata; ++dataPtr)
+        *dataPtr = *initValsPtr++;
+    
+    // Initialize the system
+    SystemInit();
+
+    main(); // Jump to main function
+    while(true); // Inf loop if we ever come back here
+}
+
+...
+```
+The code will compile successfully now, however, it'll not work. All the undefined symbols are defined but the function in `libgloss` that actually performs the initialization was never called. If you read the error description again, you'd note that the missing symbols were required by `_mainCRTStartup` function. This is the function that performs all the initialization and also calls `main` function for us. This function is also aliased as `_start`. Let's make necessary changes in `startup_rp2040.c` to call this function,
+```c++
+...
+
+// Type of vector table entry
+typedef void (*vectFunc) (void);
+
+// Declare the initial stack pointer, the value will be provided by the linker
+extern uint32_t _sstack, _sdata, _edata, _sdataf;
+
+// Declare _start function from libgloss
+extern void _start(void);
+
+// Declare interrupt functions defined in this file
+__attribute__((noreturn)) void defaultHandler();
+
+...
+
+void resetHandler()
+{
+    // Copy .data section from FLASH to SRAM
+    uint32_t *initValsPtr = &_sdataf;
+    for (uint32_t *dataPtr = &_sdata; dataPtr < &_edata; ++dataPtr)
+        *dataPtr = *initValsPtr++;
+    
+    // Initialize the system
+    SystemInit();
+
+    _start(); // Call C Runtime Startup, it will jump to main function
+    while(true); // Inf loop if we ever come back here
+}
+
+...
+```
+Once again, building and executing code on the &micro;C doesn't end well. It is quite unfortunate that there is not enough information to go through here in order to figure out what's wrong. After further analysis of `_mainCRTStartup` from [`crt0.S`](https://sourceware.org/git/gitweb.cgi?p=newlib-cygwin.git;a=blob_plain;f=libgloss/arm/crt0.S;hb=HEAD) reveals that there are many other symbols needed by `_mainCRTStartup` which have defaults set up, so the compiler never complaints about them. One of the important one among those is `__stack`, the initial stack pointer. Thus, replacing the symbol `_sstack` with `__stack` will fix the problem. You should be able to compile the code and run it on the &micro;C now. If the code is running properly then take a look at the object dump, you'd be surprised by the new sections and functions added to the list.
+
+Dealing with C Standard Library includes way more than what is discussed in this section. In upcoming tutorials you'll learn what stub functions are needed by `libc`, what other symbols it relies on, etc. The discussion provided here was just related to C Runtime Startup. But, this is it for now. Once again, a lot of new material is introduced in this tutorial. Make sure to take some time and understand it properly. See you in the next one then!

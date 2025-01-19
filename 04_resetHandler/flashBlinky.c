@@ -11,8 +11,8 @@
 // Declare usSleep function
 extern void usSleep(uint64_t us);
 
-// Global variable defining how many time LED should switch state
-uint8_t blinkCnt = 21; // nBlink = (blinkCnt - 1) / 2
+// Global variable counting how many times LED switched state
+uint8_t blinkCnt;
 
 // Main entry point
 int main(void)
@@ -22,7 +22,7 @@ int main(void)
     IO_BANK0_GPIO25_CTRL = 5; // Set GPIO 25 function to SIO
     SIO_GPIO_OE_SET |= 1 << 25; // Set output enable for GPIO 25 in SIO
 
-    while (--blinkCnt)
+    while (++blinkCnt < 21)
     {
         usSleep(500000); // Wait for 0.5sec
         SIO_GPIO_OUT_XOR |= 1 << 25;  // Flip output for GPIO 25
