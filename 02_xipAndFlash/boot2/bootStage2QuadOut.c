@@ -34,7 +34,7 @@ __attribute__((section(".boot2"))) void bootStage2(void)
     SSI_SSIENR = 1; // Enable SSI
     SSI_DR0 = 0x05; // Read Status Register 1
     SSI_DR0 = 0x35; // Read Status Register 2
-    while ((SSI_SR & (1 << 2)) && (~SSI_SR & 1)); // Wait while Transmit FIFO becomes empty and SSI is not busy
+    while ((~SSI_SR & (1 << 2)) || (SSI_SR & 1)); // Wait here while Transmit FIFO is not empty or SSI is busy
     uint8_t stReg1 = SSI_DR0; // Copy Status Register 1 value
     uint8_t stReg2 = SSI_DR0; // Copy Status Register 2 value
     //  - If QE bit is not set, then set QE bit

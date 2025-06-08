@@ -37,7 +37,7 @@ __attribute__((section(".boot2"))) void bootStage2(void)
     SSI_SSIENR = 1; // Enable SSI
     SSI_DR0 = 0x05; // Read Status Register 1
     SSI_DR0 = 0x35; // Read Status Register 2
-    while ((SSI_SR & (1 << 2)) && (~SSI_SR & 1)); // Wait while Transmit FIFO becomes empty and SSI is not busy
+    while ((~SSI_SR & (1 << 2)) || (SSI_SR & 1)); // Wait here while Transmit FIFO is not empty or SSI is busy
     uint8_t stReg1 = SSI_DR0; // Copy Status Register 1 value
     uint8_t stReg2 = SSI_DR0; // Copy Status Register 2 value
     //  - If QE bit is not set, then set QE bit
@@ -58,10 +58,9 @@ __attribute__((section(".boot2"))) void bootStage2(void)
     //  - Perform a dummy read with mode bits set to 0xa0 to avoid sending the instruction again
     SSI_DR0 = 0xeb; // Send Fast Read Quad I/O Instruction
     SSI_DR0 = 0xa0; // Send address (0x0) + mode (0xa0) = 0b00000000000000000000000010100000
-    while ((SSI_SR & (1 << 2)) && (~SSI_SR & 1)); // Wait while Transmit FIFO becomes empty and SSI is not busy
+    while ((~SSI_SR & (1 << 2)) || (SSI_SR & 1)); // Wait here while Transmit FIFO is not empty or SSI is busy
     //  - Configure SSI for sending the address and mode bits only
     SSI_SSIENR = 0; // Disable SSI to configure it
-    // SSI_CTRLR0 = (3 << 8) | (31 << 16) | (2 << 21); // Set SPI frame format to 0x2, EEPROM mode and 32 clocks per data frame
     SSI_SPI_CTRLR0 = (8 << 2) | (0 << 8) | (0xa0 << 24) | (4 << 11) | (0x2 << 0); // Set address length to 32-bits (Address + Mode), mode bits to append to address (0xa0), set wait cycles to 4, and  Command and address in format specified by FRF
     SSI_SSIENR = 1; // Enable SSI
 

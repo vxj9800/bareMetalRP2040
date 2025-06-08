@@ -201,7 +201,7 @@ __attribute__((section(".boot2"))) void bootStage2(void)
     SSI_SSIENR = 1; // Enable SSI
     SSI_DR0 = 0x05; // Read Status Register 1
     SSI_DR0 = 0x35; // Read Status Register 2
-    while ((SSI_SR & (1 << 2)) && (~SSI_SR & 1)); // Wait while Transmit FIFO becomes empty and SSI is not busy
+    while ((~SSI_SR & (1 << 2)) || (SSI_SR & 1)); // Wait here while Transmit FIFO is not empty or SSI is busy
     uint8_t stReg1 = SSI_DR0; // Copy Status Register 1 value
     uint8_t stReg2 = SSI_DR0; // Copy Status Register 2 value
     //  - If QE bit is not set, then set QE bit
@@ -255,9 +255,6 @@ Following diagram shows the worst case data read process using this instruction.
 
 Note that the number of clock cycles required for the worst case is 28, which is almost 71% faster than the standard SPI, and for the best case (where the instruction is not required) is 79% faster.
 
-> [!WARNING]
-> I have not been able to make the `bootStage2QuadIO.c` to work yet. The code presented in that file and in the upcoming paragraphs is my best attempt at getting the XIP to work with Fast Read Quad IO (`0xEB`) Instruction. If you are able to figure out the mistake in my code then please let me know by opening an Issue.
-
 To make use of this instruction, the Flash first has to be in the Quad-SPI mode, which is already discussed in the previous section. The next step is to setup SSI to perform one data read using Fast Read Quad IO (`0xEB`) Instruction. Consider the following piece of code that achieves this,
 ```C
     //  - Configure SSI for Fast Read Quad IO Instruction (EBh)
@@ -273,7 +270,7 @@ Now a dummy data read can be carried out with Mode Bits set to `0xA0`. The addre
     //  - Perform a dummy read with mode bits set to 0xa0 to avoid sending the instruction again
     SSI_DR0 = 0xeb; // Send Fast Read Quad I/O Instruction
     SSI_DR0 = 0xa0; // Send address (0x0) + mode (0xa0) = 0b00000000000000000000000010100000
-    while ((SSI_SR & (1 << 2)) && (~SSI_SR & 1)); // Wait while Transmit FIFO becomes empty and SSI is not busy
+    while ((~SSI_SR & (1 << 2)) || (SSI_SR & 1)); // Wait here while Transmit FIFO is not empty or SSI is busy
 ```
 Note that this is achieved by writing the instruction and Addr + Mode to the Data Register (`DR0`) one after the other. An infinite `while` loop is used to make sure that the message gets transmitted before turning off SSI temporarily.
 
@@ -281,10 +278,9 @@ The final step is to reconfigure SSI to send no instruction and append Mode Bits
 ```C
     //  - Configure SSI for sending the address and mode bits only
     SSI_SSIENR = 0; // Disable SSI to configure it
-    // SSI_CTRLR0 = (3 << 8) | (31 << 16) | (2 << 21); // Set SPI frame format to 0x2, EEPROM mode and 32 clocks per data frame
     SSI_SPI_CTRLR0 = (8 << 2) | (0 << 8) | (0xa0 << 24) | (4 << 11) | (0x2 << 0); // Set address length to 32-bits (Address + Mode), mode bits to append to address (0xa0), set wait cycles to 4, and Command (there is no command though) and address in format specified by FRF
     SSI_SSIENR = 1; // Enable SSI
 ```
 Note that here the instruction length is set to zero. And, `XIP_CMD` is set to Mode Bits `0xA0` instead of the instruction, contrary to was done for other instructions. From the [RP2040 Datasheet](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=606), you'd know that whether the value in `XIP_CMD` is used as a command or it is appended to the address depends on whether the instruction length is set to 8-bit or 0-bit respectively.
 
-Unfortunately, as described in the Warning above, this code doesn't work even though it is very close to the correct working code, at least that's what I feel. In any case, hopefully this section still gave you an idea about how fast XIP, SSI and Flash can work together.
+Try to generate a `.uf2` file using this. Once again, you will not observe any visible difference in the blinking of LED.

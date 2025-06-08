@@ -4,8 +4,8 @@ PROJECT = flashBlinky
 # Boot Stage 2 code files
 BOOT2DIR = boot2
 # BOOT2 = bootStage2
-BOOT2 = bootStage2QuadOut
-# BOOT2 = bootStage2QuadIO
+# BOOT2 = bootStage2QuadOut
+BOOT2 = bootStage2QuadIO
 COMPCRC = compCrc32
 CRCVALUE = crc
 
